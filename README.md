@@ -14,8 +14,10 @@ This library implements sparse quadrature rule for high-dimensional integration 
   publisher={EDP Sciences}
 }
 ```
-which proposed both a-priori and a-posteriori construction algorithms. 
+which provides both a-priori (integrand-independent) and a-posteriori (integrand-dependent) construction algorithms to push the integration to infinite dimensions (up to 10,000 dimensions tested). It uses dimension-adaptive anistropic sparse rule as 
 
 ![sparse quadrature](images/sparse-quadrature.png)
+
+which achieved 
 
 The library is built based on [Sparse Grid Interpolation Toolbox](https://people.sc.fsu.edu/~jburkardt/m_src/spinterp/spinterp.html) developed by Andreas Klimke, Universitaet Stuttgart.
