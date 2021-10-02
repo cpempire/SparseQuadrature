@@ -1,5 +1,7 @@
 # SparseQuadrature
 
+This library implements sparse quadrature rule for high-dimensional integration with Gaussian measures, accompanying the paper 
+
 ```
 @article{chen2018sparse,
   title={Sparse quadrature for high-dimensional integration with Gaussian measure},
