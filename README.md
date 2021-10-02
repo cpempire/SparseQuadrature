@@ -14,7 +14,7 @@ This MATLAB library implements sparse quadrature rule for high-dimensional integ
   publisher={EDP Sciences}
 }
 ```
-
+<img src="images/sparse-quadrature.png">
 Depending on the sparsity of the integrand, it can achieve dimension-independent convergence rates and faster convergence than Monte Carlo for high-dimensional integration problems. 
 
 <img src="images/sp-dimension.png" width="50%">
