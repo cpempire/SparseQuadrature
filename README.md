@@ -18,6 +18,9 @@ which provides both a-priori (integrand-independent) and a-posteriori (integrand
 
 ![sparse quadrature](images/sparse-quadrature.png)
 
-which achieved 
+which achieved dimension-independent convergence rates and faster convergence than Monte Carlo as shown below 
+![sparse quadrature](images/sp-dimension.png)
+![sparse quadrature](images/sp-gaussian.png)
+![sparse quadrature](images/sp-mc.png)
 
 The library is built based on [Sparse Grid Interpolation Toolbox](https://people.sc.fsu.edu/~jburkardt/m_src/spinterp/spinterp.html) developed by Andreas Klimke, Universitaet Stuttgart.
