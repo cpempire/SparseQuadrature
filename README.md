@@ -19,16 +19,21 @@ Depending on the sparsity of the integrand, it can achieve dimension-independent
 <img src="images/sparse-quadrature.png">
 Indices and quadrature points of tensor-product grid, isotropic sparse grid, and anisotropic sparse grid.
 
-<br>
+<br/>
 
 <img src="images/sp-dimension.png" width="50%">
 <p>
 Index/level in each dimension built by a-priori and a-posteriori construction algorithms using Gauss-Hermite (GH) quadrature, increasing one point (GH1) or double the number of points (GH2) in each level.
 </p>
+
+<br/>
+
 <img src="images/sp-gaussian.png" width="50%">
 <p>
 Convergence of different quadrature rules including Gauss-Hermite (GH1 and GH2), transformed Gauss–Kronrod–Patteron (tGKP), and Genz–Keister (GK).
 </p>
+
+<br/>
 <img src="images/sp-mc.png" width="50%">
 <p>
 Convergence of sparse quadrature with Genz–Keister (GK) rule compared with that of Monte Carlo for integrand with different sparsity.
