@@ -1,6 +1,6 @@
 # SparseQuadrature
 
-'''
+```
 @article{chen2018sparse,
   title={Sparse quadrature for high-dimensional integration with Gaussian measure},
   author={Chen, Peng},
@@ -11,6 +11,6 @@
   year={2018},
   publisher={EDP Sciences}
 }
-'''
+```
 
 This library is built based on [Sparse Grid Interpolation Toolbox](https://people.sc.fsu.edu/~jburkardt/m_src/spinterp/spinterp.html) developed by Andreas Klimke, Universitaet Stuttgart.
