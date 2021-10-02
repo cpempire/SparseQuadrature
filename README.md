@@ -1,6 +1,6 @@
 # SparseQuadrature
 
-This library implements sparse quadrature rule for high-dimensional integration with Gaussian measures, accompanying the paper 
+This library implements sparse quadrature rule for high-dimensional integration with Gaussian measures, built based on [Sparse Grid Interpolation Toolbox](https://people.sc.fsu.edu/~jburkardt/m_src/spinterp/spinterp.html) developed by Andreas Klimke, Universitaet Stuttgart. It provides both a-priori (integrand-independent) and a-posteriori (integrand-dependent) construction algorithms to push the integration to very high dimensions (up to 10,000 dimensions tested), which were proposed and analyzed in the paper 
 
 ```
 @article{chen2018sparse,
@@ -14,13 +14,8 @@ This library implements sparse quadrature rule for high-dimensional integration 
   publisher={EDP Sciences}
 }
 ```
-which provides both a-priori (integrand-independent) and a-posteriori (integrand-dependent) construction algorithms to push the integration to infinite dimensions (up to 10,000 dimensions tested). It uses dimension-adaptive anistropic sparse rule as 
 
-![sparse quadrature](images/sparse-quadrature.png)
-
-which achieved dimension-independent convergence rates and faster convergence than Monte Carlo as shown below 
+It achieved dimension-independent convergence rates and faster convergence than Monte Carlo for high-dimensional integration problems as shown below 
 ![sparse quadrature](images/sp-dimension.png)
 ![sparse quadrature](images/sp-gaussian.png)
 ![sparse quadrature](images/sp-mc.png)
-
-The library is built based on [Sparse Grid Interpolation Toolbox](https://people.sc.fsu.edu/~jburkardt/m_src/spinterp/spinterp.html) developed by Andreas Klimke, Universitaet Stuttgart.
