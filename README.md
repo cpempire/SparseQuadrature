@@ -19,3 +19,6 @@ It achieved dimension-independent convergence rates and faster convergence than 
 ![sparse quadrature](images/sp-dimension.png){:height="50%" width="50%"}
 ![sparse quadrature](images/sp-gaussian.png){:height="50%" width="50%"}
 ![sparse quadrature](images/sp-mc.png){:height="50%" width="50%"}
+<img src="images/sp-dimension.png" width="30%">
+<img src="images/sp-gaussian.png" width="30%">
+<img src="images/sp-mc.png" width="30%">
