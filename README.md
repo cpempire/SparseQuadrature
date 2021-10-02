@@ -1,6 +1,6 @@
 # SparseQuadrature
 
-This library implements sparse quadrature rule for high-dimensional integration with Gaussian measures, built based on [Sparse Grid Interpolation Toolbox](https://people.sc.fsu.edu/~jburkardt/m_src/spinterp/spinterp.html) developed by Andreas Klimke. It provides both a-priori (integrand-independent) and a-posteriori (integrand-dependent) construction algorithms to push the integration to very high dimensions (up to 10,000 dimensions tested), which were proposed and analyzed in the paper 
+This MATLAB library implements sparse quadrature rule for high-dimensional integration with Gaussian measures, built based on [Sparse Grid Interpolation Toolbox](https://people.sc.fsu.edu/~jburkardt/m_src/spinterp/spinterp.html) developed by Andreas Klimke. It provides both a-priori (integrand-independent) and a-posteriori (integrand-dependent) construction algorithms to push the integration to very high dimensions (up to 10,000 dimensions tested), which were proposed and analyzed in the paper 
 
 ```
 @article{chen2018sparse,
@@ -19,7 +19,7 @@ Depending on the sparsity of the integrand, it can achieve dimension-independent
 
 <img src="images/sp-dimension.png" width="50%">
 <p>
-Index/level in each dimension built by a-priori and a-posteriori construction algorithms using Gauss-Hermite (GH) quadrature.
+Index/level in each dimension built by a-priori and a-posteriori construction algorithms using Gauss-Hermite (GH) quadrature, increasing one point (GH1) or double the number of points (GH2) in each level.
 </p>
 <img src="images/sp-gaussian.png" width="50%">
 <img src="images/sp-mc.png" width="50%">
