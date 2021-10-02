@@ -1,0 +1,2613 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>spadaptvals</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-10-27"><meta name="DC.source" content="spadaptvals.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#3">% verification for the newly added indices</a></li><li><a href="#4">end of the adaptive construction</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> z = spadaptvals(f, d, range, options, varargin)
+<span class="comment">% SPADAPTVALS   Compute hierarchical surpluses dimension-adaptively</span>
+<span class="comment">% Computes the sparse grid representation of a function using</span>
+<span class="comment">% dimension-adaptive sparse grids. The calling options are identical</span>
+<span class="comment">% to SPVALS (internal function).</span>
+
+<span class="comment">% Author : Andreas Klimke, Universitaet Stuttgart</span>
+<span class="comment">% Version: 2.3</span>
+<span class="comment">% Date   : April 10, 2008</span>
+
+<span class="comment">% Change log:</span>
+<span class="comment">% V1.0   : April 22, 2004</span>
+<span class="comment">%          Initial version</span>
+<span class="comment">% V1.1   : January 12, 2005</span>
+<span class="comment">%          Corrected computation of relative estimated error;</span>
+<span class="comment">%          Removed storing of Grel and Gabs, not required.</span>
+<span class="comment">% V1.2   : March 28, 2005</span>
+<span class="comment">%          Completely revised version using sparse index arrays.</span>
+<span class="comment">% V1.3   : April 16, 2005</span>
+<span class="comment">%          Corrected serious bug incolving correct value of nbid.</span>
+<span class="comment">% V1.4   : May 23, 2005</span>
+<span class="comment">%          Corrected bug involving memory allocation of forward</span>
+<span class="comment">%          neighbor array (used maxind instead of maxforwardind in</span>
+<span class="comment">%          new size calculation). Corrected bug in memory</span>
+<span class="comment">%          allocation concerning maxind variable (used wrong</span>
+<span class="comment">%          length).</span>
+<span class="comment">% V1.5   : August 11, 2005</span>
+<span class="comment">%          Corrected bug involving addr variable which was used</span>
+<span class="comment">%          twice in a different context. Changed one to tmpaddr</span>
+<span class="comment">% V1.6   : September 02, 2005</span>
+<span class="comment">%          Altered structure assignment to avoid warning in new</span>
+<span class="comment">%          Matlab release R14SP2.</span>
+<span class="comment">% V1.7   : December 30, 2005</span>
+<span class="comment">%          Removed serious bug that occurred in higher dimensions</span>
+<span class="comment">%          resulting from a false re-ordering result from</span>
+<span class="comment">%          sortheap and popheap. The reason for this was the mixing</span>
+<span class="comment">%          of double and uint32 data types (popheap.m and pushheap.m</span>
+<span class="comment">%          were not written to get uint32 type arguments).</span>
+<span class="comment">% V1.8   : January 23, 2006</span>
+<span class="comment">%          Removed bug: Set dimadaptDegree to 0.9, as described in</span>
+<span class="comment">%          the documentation.</span>
+<span class="comment">% V1.9   : June 7, 2006</span>
+<span class="comment">%          Updated warning message to be more meaningful</span>
+<span class="comment">% V2.0   : September 30, 2007</span>
+<span class="comment">%          Improved allocation of grid point array to allow</span>
+<span class="comment">%          dimensions up to d = 65534.</span>
+<span class="comment">% V2.1   : December 15, 2007</span>
+<span class="comment">%          Fixed bug with levels vector not being cleared</span>
+<span class="comment">%          Added handling of Gauss-Patterson grid</span>
+<span class="comment">%          Added enforcement of maximum depth</span>
+<span class="comment">% V2.2   : January 20, 2008</span>
+<span class="comment">%          Added points strategy for measuring degree of dimensional</span>
+<span class="comment">%          adaptivity.</span>
+<span class="comment">% V2.3   : April 10, 2008</span>
+<span class="comment">%          Fixed Out of range value or NaN computed in integer arithmetic</span>
+<span class="comment">%          warning occurring in Matlab v7.4.0.287, R2007a.</span>
+
+<span class="comment">% Author : Peng Chen</span>
+<span class="comment">% Version: 1.0</span>
+<span class="comment">% Date   : October 2, 2013</span>
+<span class="comment">%          Fixed bug for DegreeStrategy; implement hierarchical integration</span>
+
+<span class="comment">% ------------------------------------------------------------</span>
+<span class="comment">% Sparse Grid Interpolation Toolbox</span>
+<span class="comment">% Copyright (c) 2006 W. Andreas Klimke, Universitaet Stuttgart</span>
+<span class="comment">% Copyright (c) 2007-2008 W. A. Klimke. All Rights Reserved.</span>
+<span class="comment">% See LICENSE.txt for license.</span>
+<span class="comment">% email: klimkeas@ians.uni-stuttgart.de</span>
+<span class="comment">% web  : http://www.ians.uni-stuttgart.de/spinterp</span>
+<span class="comment">% ------------------------------------------------------------</span>
+
+<span class="comment">% CONSTANTS</span>
+RESIZE_FACTOR = 1.5;
+MAX_X_SIZE = 1e7;
+
+d = uint16(d);
+
+<span class="keyword">if</span> nargin &lt; 3, range = []; <span class="keyword">end</span>
+<span class="keyword">if</span> nargin &lt; 4, options = []; <span class="keyword">end</span>
+<span class="keyword">if</span> nargin &lt; 5, varargin = {}; <span class="keyword">end</span>
+
+vectorized = spget(options, <span class="string">'Vectorized'</span>, <span class="string">'off'</span>);
+zprev = spget(options, <span class="string">'PrevResults'</span>);
+varpos = spget(options, <span class="string">'VariablePositions'</span>);
+nresults = spget(options, <span class="string">'NumberOfOutputs'</span>, 1);
+reltol = spget(options, <span class="string">'RelTol'</span>, 1e-2);
+abstol = spget(options, <span class="string">'AbsTol'</span>, 1e-6);
+gridtype = spget(options, <span class="string">'GridType'</span>, <span class="string">'Clenshaw-Curtis'</span>);
+functionArgType = spget(options, <span class="string">'FunctionArgType'</span>, <span class="string">'list'</span>);
+keepFunctionValues = spget(options, <span class="string">'KeepFunctionValues'</span>, <span class="string">'off'</span>);
+keepGrid = spget(options, <span class="string">'KeepGrid'</span>, <span class="string">'off'</span>);
+minPoints = spget(options, <span class="string">'MinPoints'</span>, 100);
+maxPoints = spget(options, <span class="string">'MaxPoints'</span>, 10000);
+problemType = spget(options, <span class="string">'ProblemType'</span>, <span class="string">'interpolation'</span>);
+verification = spget(options, <span class="string">'Verification'</span>, <span class="string">'off'</span>);
+keepWeight = spget(options, <span class="string">'KeepWeight'</span>, <span class="string">'off'</span>);
+distributionType = spget(options, <span class="string">'DistributionType'</span>, <span class="string">'uniform'</span>);
+
+<span class="keyword">if</span> strcmpi(gridtype, <span class="string">'gauss-patterson'</span>)
+	nmax = spget(options, <span class="string">'MaxDepth'</span>, 6);
+	<span class="keyword">if</span> nmax &gt; 6
+		warning(<span class="string">'MATLAB:spinterp:badopt'</span>,[<span class="string">'Maximum supported depth '</span> <span class="keyword">...</span>
+		  <span class="string">'level for the Gauss-Patterson grid is 6, but MaxDepth '</span> <span class="keyword">...</span>
+			<span class="string">'was set to '</span> num2str(nmax) <span class="string">'. Using MaxDepth = 6 instead.'</span>]);
+		nmax = 6;
+	<span class="keyword">end</span>
+<span class="keyword">elseif</span> strcmpi(gridtype, <span class="string">'chebyshev'</span>)
+  nmax = spget(options, <span class="string">'MaxDepth'</span>, 10);
+	<span class="keyword">if</span> nmax &gt; 10
+		warning(<span class="string">'MATLAB:spinterp:badopt'</span>,[<span class="string">'Maximum supported depth '</span> <span class="keyword">...</span>
+		  <span class="string">'level for the Chebyshev grid is 10, but MaxDepth '</span> <span class="keyword">...</span>
+			<span class="string">'was set to '</span> num2str(nmax) <span class="string">'. Using MaxDepth = 10 instead.'</span>]);
+		nmax = 10;
+	<span class="keyword">end</span>
+<span class="keyword">else</span>
+  nmax = 255;
+<span class="keyword">end</span>
+maxDepth = nmax;
+
+enableDCT = spget(options, <span class="string">'EnableDCT'</span>, <span class="string">'on'</span>);
+w = spget(options, <span class="string">'DimadaptDegree'</span>, 0.9);
+strat = spget(options, <span class="string">'DegreeStrategy'</span>, <span class="string">'balancing'</span>);
+<span class="keyword">if</span> strcmpi(strat, <span class="string">'balancing'</span>), isps = 1; <span class="keyword">else</span> isps = 0; <span class="keyword">end</span>
+
+isgp = 0;
+<span class="keyword">switch</span> lower(gridtype)
+ <span class="keyword">case</span> <span class="string">'clenshaw-curtis'</span>
+  ipmethod = <span class="string">'spcmpvalsccsp'</span>;
+  gridgen = <span class="string">'spgridccsp'</span>;
+  wgen    = <span class="string">'spquadwccspadapt'</span>;
+ <span class="keyword">case</span> <span class="string">'chebyshev'</span>
+	<span class="keyword">if</span> strcmpi(enableDCT, <span class="string">'off'</span>)
+		ipmethod = <span class="string">'spcmpvalscbsp'</span>;
+	<span class="keyword">else</span>
+		ipmethod = <span class="string">'spcmpvalscbspdct'</span>;
+	<span class="keyword">end</span>
+  gridgen = <span class="string">'spgridcbsp'</span>;
+  wgen    = <span class="string">'spquadwcbspadapt'</span>;
+  wtype   = <span class="string">'chebweights'</span>;
+ <span class="keyword">case</span> <span class="string">'gauss-patterson'</span>
+  ipmethod = <span class="string">'spcmpvalsgpsp'</span>;
+  gridgen = <span class="string">'spgridgpsp'</span>;
+  wgen    = <span class="string">'spquadwgpspadapt'</span>;
+  wtype   = <span class="string">'gpweights'</span>;
+	isgp = 1;
+<span class="keyword">end</span>
+
+<span class="comment">% Initialize time and feval counters</span>
+fevalTime = 0;
+surplusCompTime = 0;
+ntotalpoints = 0;
+
+<span class="keyword">if</span> minPoints &gt; maxPoints
+  minPoints = maxPoints;
+<span class="keyword">end</span>
+
+min_nd = min(maxDepth, double(d));
+
+<span class="comment">% shift the interpolation parameters to the right position, and</span>
+<span class="comment">% fill field up with any parameters in varargin.</span>
+val = posvars(d, varpos, varargin{:});
+
+<span class="keyword">if</span> isempty(zprev)
+  <span class="comment">% Allocate some memory for the index set arrays; this is resized</span>
+  <span class="comment">% as necessary.</span>
+  maxind = max(10, floor(65536/double(d)));
+  maxforwardind = max(10, floor(65536/double(d)));
+
+  <span class="comment">% Vector to store maximum level in each dimension</span>
+  maxlevel = zeros(1,d);
+
+  <span class="comment">% Indices data</span>
+  indicesNDims = zeros(maxind,1,<span class="string">'uint8'</span>);
+  indicesDims  = zeros(maxind*min_nd,1,<span class="string">'uint16'</span>);
+  indicesLevs  = zeros(maxind*min_nd,1,<span class="string">'uint8'</span>);
+  indicesAddr  = zeros(maxind,1,<span class="string">'uint32'</span>);
+
+  <span class="comment">% Neighbor data</span>
+  backward     = zeros(maxind*min_nd,1,<span class="string">'uint32'</span>);
+  forwardAddr  = zeros(maxind,1,<span class="string">'uint32'</span>);
+  forward      = zeros(maxforwardind,d,<span class="string">'uint32'</span>);
+
+  <span class="comment">% Indicate active/passive indices (only necessary for</span>
+  <span class="comment">% construction of the grid)</span>
+  active       = false(maxind,1);
+  <span class="comment">% Array containing ID's of active indices, ordered by error/number of</span>
+  <span class="comment">% points</span>
+  A            = zeros(maxind,1,<span class="string">'uint32'</span>);
+  Ap           = zeros(maxind,1,<span class="string">'uint32'</span>);
+
+  <span class="comment">% Store start adresses of a sub-grid in the support node array</span>
+  ptsaddr      = zeros(maxind,1, <span class="string">'uint32'</span>);
+  ptslen       = zeros(maxind,1, <span class="string">'uint32'</span>);
+
+  <span class="comment">% Initialize with first index; There are no values to be inserted</span>
+  <span class="comment">% in the indices array, since the first index is (0,...,0). (We</span>
+  <span class="comment">% start from 0 -- this also results in the sparse structure of</span>
+  <span class="comment">% the array).</span>
+  currentindex = uint32(1);
+
+  <span class="comment">% Global error indicator</span>
+  E = zeros(nresults,maxind);
+  G = zeros(maxind,1);
+
+  <span class="comment">% Conventional sparse grid ordering</span>
+  G2 = zeros(maxind,1);
+
+  <span class="comment">% number of active index sets</span>
+  na = uint32(1);
+  nap = uint32(1);
+
+  <span class="comment">% total number of index sets</span>
+  ni = uint32(1);
+
+  <span class="comment">% number of forward neighbor sets</span>
+  nfi = uint32(0);
+
+  <span class="comment">% Initialize the index set data for the first index</span>
+  indicesNDims(1)  = 0;
+  indicesAddr(1)   = 1;
+  addr             = 1;
+  ptslen(1)        = 1;
+  ptsaddr(1)       = 1;
+  active(1)        = true;
+  A(1)             = 1;
+  Ap(1)            = 1;
+
+  <span class="comment">% set initial errors to infinity</span>
+  E(:,1) = inf * ones(nresults,1);
+  G(1) = inf;
+  G2(1) = 1;
+  accuracy = inf;
+  absaccuracy = inf;
+
+  levelseq = struct(<span class="string">'indicesNDims'</span>, indicesNDims, <span class="keyword">...</span>
+        <span class="string">'indicesDims'</span>, indicesDims, <span class="keyword">...</span>
+        <span class="string">'indicesLevs'</span>, indicesLevs, <span class="keyword">...</span>
+        <span class="string">'indicesAddr'</span>, indicesAddr, <span class="keyword">...</span>
+        <span class="string">'forwardAddr'</span>, forwardAddr, <span class="keyword">...</span>
+        <span class="string">'forwardNeighbors'</span>, forward, <span class="keyword">...</span>
+        <span class="string">'backwardNeighbors'</span>, backward, <span class="keyword">...</span>
+        <span class="string">'subGridPoints'</span>, ptslen, <span class="keyword">...</span>
+        <span class="string">'subGridAddr'</span>, ptsaddr);
+
+  <span class="comment">% Compute new function values for first index set</span>
+  t0 = clock;
+
+  z = cell(nresults,1);
+  [z(1:nresults), x] = <span class="keyword">...</span>
+      spevalf(gridgen, f, levelseq, d, <span class="keyword">...</span>
+        [currentindex, currentindex], <span class="keyword">...</span>
+        range, varpos, vectorized, nresults, <span class="keyword">...</span>
+        functionArgType,val{:});
+
+  <span class="keyword">if</span> strcmpi(keepFunctionValues, <span class="string">'on'</span>)
+    y = z;
+  <span class="keyword">end</span>
+  <span class="keyword">if</span> strcmpi(keepGrid, <span class="string">'on'</span>)
+  <span class="comment">% Rescale sparse grid to actual range</span>
+    <span class="keyword">for</span> l = 1:d
+      x(:,l) = range(l,1)+(range(l,2)-range(l,1)).*x(:,l);
+    <span class="keyword">end</span>
+  <span class="keyword">end</span>
+  <span class="keyword">if</span>  strcmpi(keepWeight, <span class="string">'on'</span>)
+      <span class="comment">% Compute quadrature weight</span>
+      weight = 1;
+  <span class="keyword">end</span>
+  fevalTime = fevalTime + etime(clock,t0);
+
+  ntotalpoints = ntotalpoints + ptsaddr(1);
+  nadaptpoints = ntotalpoints; <span class="comment">% uint32(0);</span>
+  maxsetpoints = 0;
+
+  <span class="comment">% Since the initial subgrid contains only a single point, it is</span>
+  <span class="comment">% clear that zmin = z and zmax = z;</span>
+  zmin = cell2mat(z);
+  zmax = cell2mat(z);
+  xmin = repmat(x,nresults,1);
+  xmax = xmin;
+
+<span class="keyword">else</span>
+  <span class="comment">% get previous results</span>
+  z = zprev.vals;
+  <span class="keyword">if</span>  strcmpi(keepWeight, <span class="string">'on'</span>)
+      weight = zprev.weight;
+  <span class="keyword">end</span>
+  gridtype = zprev.gridType;
+  <span class="keyword">if</span> isfield(zprev, <span class="string">'fvals'</span>)
+    y = zprev.fvals;
+  <span class="keyword">end</span>
+  <span class="keyword">if</span> isfield(zprev, <span class="string">'grid'</span>)
+    x = zprev.grid{1};
+  <span class="keyword">end</span>
+  ntotalpoints = zprev.nPoints;
+  nadaptpoints = uint32(zprev.dimadaptDegree * double(zprev.nPoints));
+<span class="comment">% 	if isps</span>
+<span class="comment">% 		if isfield(zprev, 'dimadaptDegree')</span>
+<span class="comment">% 			nadaptpoints = uint32(zprev.dimadaptDegree * double(zprev.nPoints));</span>
+<span class="comment">%         else</span>
+<span class="comment">% 		    nadaptpoints = uint32(0);</span>
+<span class="comment">% 		end</span>
+<span class="comment">% 	end</span>
+  <span class="keyword">if</span> ntotalpoints &gt;= maxPoints
+    maxPoints = ntotalpoints + 1;
+  <span class="keyword">end</span>
+  <span class="comment">% Indices data</span>
+  indicesNDims = zprev.indices.indicesNDims;
+  indicesDims  = zprev.indices.indicesDims;
+  indicesLevs  = zprev.indices.indicesLevs;
+  indicesAddr  = zprev.indices.indicesAddr;
+
+  <span class="comment">% Neighbor data</span>
+  backward     = zprev.indices.backwardNeighbors;
+  forwardAddr  = zprev.indices.forwardAddr;
+  forward      = zprev.indices.forwardNeighbors;
+
+  <span class="comment">% Indicate active/passive indices (only necessary for</span>
+  <span class="comment">% construction of the grid)</span>
+  active       = zprev.indices.active;
+
+  <span class="comment">% Store start adresses of a sub-grid in the support node array</span>
+  ptsaddr      = zprev.indices.subGridAddr;
+  ptslen       = zprev.indices.subGridPoints;
+
+  ni = size(indicesAddr,1);
+  maxind = double(ni);
+
+  nfi = size(forward,1);
+  maxforwardind = nfi;
+
+  maxlevel = zprev.maxLevel;
+
+  na = size(zprev.activeIndices,1);
+  nap = size(zprev.activeIndices2,1);
+  A = zprev.activeIndices;
+  Ap = zprev.activeIndices2;
+
+  G = zprev.G;
+  G2 = zprev.G2;
+  E = zprev.E;
+
+  zmin = zprev.fevalRange(:,1);
+  zmax = zprev.fevalRange(:,2);
+  xmin = zprev.minGridVal;
+  xmax = zprev.maxGridVal;
+
+  maxsetpoints = zprev.maxSetPoints;
+
+  accuracy = zprev.estRelError;
+  absaccuracy = zprev.estAbsError;
+<span class="keyword">end</span>
+
+<span class="comment">% Initialize array of maximum surpluses</span>
+maxsurplus = zeros(nresults,1);
+
+<span class="comment">% Initialize array of maximum error indicators</span>
+indicator = zeros(nresults,1);
+
+<span class="comment">% Allocate some temporary arrays</span>
+bn    = zeros(d,1,<span class="string">'uint32'</span>);
+bdim  = zeros(d,1,<span class="string">'uint16'</span>);
+bid   = zeros(d,1,<span class="string">'uint32'</span>);
+
+success = 0;
+atleastonestep = 0;
+
+<span class="keyword">while</span> (ntotalpoints &lt; maxPoints) &amp;&amp; ~success
+</pre><pre class="codeinput">     ntotalpoints
+
+    <span class="comment">% Get next active index to process</span>
+    done = 0;
+    <span class="keyword">while</span> ~done
+          <span class="comment">% Check if conventional rule or error indicator governs next step of the algorithm</span>
+          pickedIndex = false;
+          pickedAdaptive = false;
+          <span class="keyword">if</span> nap &gt; 0
+                <span class="keyword">if</span> (~isps &amp;&amp; 1/G2(Ap(1)) &lt; (1-min(max(w,0),1)) * maxsetpoints) || <span class="keyword">...</span>
+                     (isps &amp;&amp; nadaptpoints &gt;= (min(max(w,0),1)) * ntotalpoints)
+                    [currentindex, Ap] = popheap(Ap, double(nap), G2);
+                    pickedIndex = true;
+                    nap = nap - 1;
+                <span class="keyword">end</span>
+          <span class="keyword">end</span>
+
+          <span class="keyword">if</span> ~pickedIndex
+            <span class="comment">% Put active index with maximum error into old index set</span>
+                <span class="keyword">if</span> na &gt; 0
+                      [currentindex, A] = popheap(A, double(na), G);
+                      pickedIndex = true;
+                      pickedAdaptive = true;
+                      na = na - 1;
+                <span class="keyword">end</span>
+          <span class="keyword">end</span>
+
+          <span class="keyword">if</span> ~pickedIndex
+          <span class="comment">% No more active index based on error available</span>
+              <span class="keyword">if</span> nap &gt; 0
+                  [currentindex, Ap] = popheap(Ap, double(nap), G2);
+                  pickedIndex = true;
+                  nap = nap - 1;
+              <span class="keyword">end</span>
+          <span class="keyword">end</span>
+
+          <span class="keyword">if</span> ~pickedIndex
+          <span class="comment">% No more indices at all available!</span>
+              <span class="keyword">break</span>;
+          <span class="keyword">end</span>
+
+          <span class="comment">% Check if still an active index (index may have been processed already due to other criterium)</span>
+          <span class="keyword">if</span> active(currentindex) == true
+              done = 1;
+          <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+    <span class="keyword">if</span> ~done, <span class="keyword">break</span>; <span class="keyword">end</span>
+
+    <span class="comment">% indicate old index set</span>
+    active(currentindex) = false;
+
+    nfi = nfi + 1;
+    <span class="comment">% Resize forward neighbor array if necessary</span>
+    <span class="keyword">if</span> nfi &gt; maxforwardind
+          maxforwardind = ceil(maxforwardind * RESIZE_FACTOR);
+          addind = maxforwardind - size(forward, 1);
+          forward = [forward; zeros(addind,d,<span class="string">'uint32'</span>)];
+    <span class="keyword">end</span>
+    forwardAddr(currentindex) = nfi;
+
+    <span class="comment">% Get all the backward neighbors</span>
+    nbid = indicesNDims(currentindex);
+    tmpaddr = indicesAddr(currentindex);
+    j = uint8(1);
+
+    <span class="comment">% Corrected bug: initialization of level vector was missing!</span>
+    level = zeros(d,1,<span class="string">'uint8'</span>);
+
+    <span class="keyword">while</span> j &lt;= nbid
+        bdim(j)  = indicesDims(tmpaddr);
+        bid(j)   = backward(tmpaddr);
+        level(bdim(j)) = indicesLevs(tmpaddr);
+        tmpaddr = tmpaddr + 1;
+        j = j + 1;
+    <span class="keyword">end</span>
+
+    i = uint16(1);
+
+    <span class="comment">% Resize arrays if necessary</span>
+    <span class="keyword">if</span> ni+uint32(d) &gt; maxind
+        maxind = ceil(maxind * RESIZE_FACTOR);
+        addind = max(double(d), double(maxind) - size(indicesNDims, 1));
+        maxind = uint32(size(indicesNDims,1) + addind);
+
+        indicesNDims = [indicesNDims; zeros(addind,1,<span class="string">'uint8'</span>)];
+        indicesDims  = [indicesDims; zeros(addind*min_nd,1,<span class="string">'uint16'</span>)];
+        indicesLevs  = [indicesLevs; zeros(addind*min_nd,1,<span class="string">'uint8'</span>)];
+        indicesAddr  = [indicesAddr; zeros(addind,1,<span class="string">'uint32'</span>)];
+
+        <span class="comment">% Neighbor data</span>
+        backward     = [backward; zeros(addind*min_nd,1,<span class="string">'uint32'</span>)];
+        forwardAddr  = [forwardAddr; zeros(addind,1,<span class="string">'uint32'</span>)];
+
+        <span class="comment">% Store start adresses of a sub-grid in the support node array</span>
+        ptsaddr      = [ptsaddr; zeros(addind,1, <span class="string">'uint32'</span>)];
+        ptslen       = [ptslen; zeros(addind,1, <span class="string">'uint32'</span>)];
+
+        <span class="comment">% Indicate active/passive indices</span>
+        active       = [active; false(addind,1)];
+
+        <span class="comment">% Array containing ID's of active indices, ordered by</span>
+        <span class="comment">% error/number of points</span>
+        A            = [A; zeros(addind,1,<span class="string">'uint32'</span>)];
+        Ap           = [Ap; zeros(addind,1,<span class="string">'uint32'</span>)];
+        E            = [E zeros(nresults, addind)];
+        G            = [G; zeros(addind, 1)];
+        G2           = [G2; zeros(addind, 1)];
+    <span class="keyword">end</span>
+
+    niold = ni;
+    <span class="keyword">while</span> i &lt;= d
+	    <span class="comment">% check if maximum depth is exceeded</span>
+		<span class="keyword">if</span> level(i) + 1 &gt; maxDepth
+            i = i + 1;
+            <span class="keyword">continue</span>;
+        <span class="keyword">end</span>
+
+        <span class="comment">% check if a new index in direction l is admissible</span>
+        isadmissible = true;
+
+        j = uint8(1);
+        <span class="keyword">while</span> j &lt;= nbid
+              <span class="keyword">if</span> i == bdim(j)
+                j = j + 1;
+                <span class="keyword">continue</span>;
+              <span class="keyword">end</span>
+              forwardid = forwardAddr(bid(j));
+              <span class="keyword">if</span> forwardid == 0
+                isadmissible = false;
+                <span class="keyword">break</span>;
+              <span class="keyword">end</span>
+              backofnew = forward(forwardid,i);
+              <span class="keyword">if</span> backofnew == 0
+                isadmissible = false;
+                <span class="keyword">break</span>;
+              <span class="keyword">elseif</span> active(backofnew)
+                isadmissible = false;
+                <span class="keyword">break</span>;
+              <span class="keyword">else</span>
+                bn(bdim(j)) = backofnew;
+              <span class="keyword">end</span>
+              j = j + 1;
+        <span class="keyword">end</span>
+
+        <span class="keyword">if</span> isadmissible
+              atleastonestep = 1;
+              bn(i) = currentindex;
+              addr = indicesAddr(ni)+uint32(indicesNDims(ni));
+              ni = ni + 1;
+
+              indicesAddr(ni) = addr;
+
+              <span class="keyword">if</span> maxlevel(i) &lt; level(i) + 1;
+                maxlevel(i) = level(i) + 1;
+              <span class="keyword">end</span>
+
+              <span class="keyword">if</span> nbid == 0
+                    nnewdims = uint8(1);
+                    indicesDims(addr) = i;
+                    indicesLevs(addr) = uint8(1);
+                    backward(addr) = bn(i);
+                    forward(forwardAddr(bn(i)),i) = ni;
+                    npoints = uint32(2);
+                    addr = addr + 1;
+                    nisum = 1;
+              <span class="keyword">else</span>
+                    j = uint8(1);
+                    insert = true;
+                    nnewdims = uint8(0);
+                    npoints = uint32(1);
+                    nisum = 0;
+                    nbidtemp = nbid;   <span class="comment">% use temporary variable, since nbid</span>
+                                       <span class="comment">% must not change; it is not updated in</span>
+                                       <span class="comment">% case other admissible indices are</span>
+                                       <span class="comment">% found!</span>
+                    <span class="keyword">while</span> j &lt;= nbidtemp
+                          nnewdims = nnewdims + 1;
+                          id = bdim(j);
+                          <span class="keyword">if</span> i &gt; id
+                                lev = level(id);
+                                j  = j + 1;
+                                <span class="keyword">if</span> insert &amp;&amp; j &gt; nbidtemp
+                                  bdim(nbidtemp+1) = i;
+                                  level(i) = 0;
+                                  nbidtemp = nbidtemp + 1;
+                                <span class="keyword">end</span>
+                          <span class="keyword">elseif</span> i == id
+                                insert = false;
+                                lev = level(id) + 1;
+                                j = j + 1;
+                          <span class="keyword">elseif</span> insert
+                                insert = false;
+                                lev = uint8(1);
+                                id = i;
+                          <span class="keyword">else</span>
+                                lev = level(id);
+                                j = j + 1;
+                          <span class="keyword">end</span>
+
+                          forward(forwardAddr(bn(id)),id) = ni;
+                          indicesDims(addr) = id;
+                          indicesLevs(addr) = lev;
+                          backward(addr) = bn(id);
+
+                          <span class="comment">% Compute the number of gridpoints</span>
+                          <span class="keyword">if</span> isgp == 1
+                                npoints = npoints * 2^uint32(lev);
+                          <span class="keyword">else</span>
+                                <span class="keyword">if</span> lev &lt; 3
+                                    npoints = npoints * 2;
+                                <span class="keyword">else</span>
+                                    npoints = npoints * 2^uint32(lev-1);
+                                <span class="keyword">end</span>
+                          <span class="keyword">end</span>
+
+                          <span class="comment">% Compute index sum</span>
+                          nisum = nisum + double(lev);
+
+                          addr = addr + 1;
+                    <span class="keyword">end</span>
+               <span class="keyword">end</span>
+              indicesNDims(ni) = nnewdims;
+              ptslen(ni) = npoints;
+              ptsaddr(ni) = ptsaddr(ni-1) + ptslen(ni-1);
+              active(ni) = true;
+              ntotalpoints = ntotalpoints + npoints;
+
+              <span class="keyword">if</span> pickedAdaptive
+                  nadaptpoints = nadaptpoints + npoints;
+              <span class="keyword">end</span>
+
+              <span class="comment">% update current maximum number of points per index set</span>
+              maxsetpoints = max(maxsetpoints, nisum);
+
+              <span class="comment">% update second error indicator</span>
+              G2(ni) = 1./double(nisum);
+         <span class="keyword">end</span>
+         i = i + 1;
+    <span class="keyword">end</span>
+
+    <span class="keyword">if</span> ni &gt; niold
+        levelseq = struct(<span class="string">'indicesNDims'</span>, indicesNDims, <span class="keyword">...</span>
+                          <span class="string">'indicesDims'</span>, indicesDims, <span class="keyword">...</span>
+                          <span class="string">'indicesLevs'</span>, indicesLevs, <span class="keyword">...</span>
+                          <span class="string">'indicesAddr'</span>, indicesAddr, <span class="keyword">...</span>
+                          <span class="string">'forwardAddr'</span>, forwardAddr, <span class="keyword">...</span>
+                          <span class="string">'forwardNeighbors'</span>, forward, <span class="keyword">...</span>
+                          <span class="string">'backwardNeighbors'</span>, backward, <span class="keyword">...</span>
+                          <span class="string">'subGridPoints'</span>, ptslen, <span class="keyword">...</span>
+                          <span class="string">'subGridAddr'</span>, ptsaddr);
+
+		kend = niold;
+        <span class="keyword">while</span> kend &lt; ni
+            <span class="comment">% Compute new function values for new index sets</span>
+            t0 = clock;
+
+            psize = 0;
+            kstart = kend+1;
+            <span class="keyword">while</span> psize &lt; MAX_X_SIZE &amp;&amp; kend &lt; ni
+                psize = psize + ptslen(kend) * double(d);
+                kend = kend + 1;
+            <span class="keyword">end</span>
+			[znew(1:nresults), xnew] = <span class="keyword">...</span>
+					spevalf(gridgen, f, levelseq, d, [kstart, kend], <span class="keyword">...</span>
+									range, varpos, vectorized, nresults, <span class="keyword">...</span>
+									functionArgType,val{:});
+
+			<span class="keyword">if</span> strcmpi(keepFunctionValues, <span class="string">'on'</span>)
+				<span class="keyword">for</span> l = 1:nresults
+					y{l} = [y{l}; znew{l}];
+				<span class="keyword">end</span>
+			<span class="keyword">end</span>
+
+			<span class="keyword">if</span> strcmpi(keepGrid, <span class="string">'on'</span>)
+				<span class="comment">% Rescale sparse grid to actual range</span>
+				xnew2 = xnew;
+				<span class="keyword">for</span> l = 1:d
+					xnew2(:,l) = range(l,1)+(range(l,2)-range(l,1)).*xnew2(:,l);
+				<span class="keyword">end</span>
+				x = [x; xnew2];
+			<span class="keyword">end</span>
+
+			fevalTime = fevalTime + etime(clock,t0);
+			<span class="keyword">for</span> l = 1:nresults
+				[temp, id] = min(znew{l}(:));
+				<span class="keyword">if</span> temp &lt; zmin(l)
+					zmin(l) = temp;
+					xmin(l,:) = xnew(id,:);
+				<span class="keyword">end</span>
+				[temp, id] = max(znew{l}(:));
+				<span class="keyword">if</span> temp &gt; zmax(l)
+					zmax(l) = temp;
+					xmax(l,:) = xnew(id,:);
+				<span class="keyword">end</span>
+			<span class="keyword">end</span>
+
+			t0 = clock;
+			<span class="keyword">for</span> l = 1:nresults
+				znew{l} = znew{l} - feval(ipmethod, d, z{l}, xnew, <span class="keyword">...</span>
+																	levelseq, kstart, kend);
+            <span class="keyword">end</span>
+			<span class="keyword">if</span>  strcmpi(gridtype, <span class="string">'chebyshev'</span>)
+				<span class="keyword">for</span> l = 1:nresults
+					znew{l} = reordervals(znew{l},levelseq, kstart, kend);
+				<span class="keyword">end</span>
+            <span class="keyword">end</span>
+			surplusCompTime = surplusCompTime + etime(clock,t0);
+
+            <span class="keyword">if</span>  strcmpi(keepWeight, <span class="string">'on'</span>)
+                <span class="comment">% compute new quadrature weight</span>
+                address = sum(levelseq.indicesNDims(1:kstart-1))+1:sum(levelseq.indicesNDims(1:kend));
+                <span class="keyword">if</span>  strcmpi(gridtype, <span class="string">'chebyshev'</span>)
+                    maxn = double(max(levelseq.indicesLevs(address)));
+                    [w1d, id] = feval(wtype, maxn);
+                    weightnew = feval(wgen,levelseq,w1d,id,kstart,kend);
+                <span class="keyword">elseif</span> strcmpi(gridtype, <span class="string">'gauss-patterson'</span>)
+                    maxn = double(max(levelseq.indicesLevs(address)));
+                    [w1d, id] = feval(wtype, maxn);
+                    weightnew = feval(wgen,levelseq,w1d,id,kstart,kend);
+                    <span class="keyword">if</span> strcmpi(distributionType, <span class="string">'beta'</span>)
+                        pdf = ones(size(xnew,1),1);
+                        <span class="keyword">for</span> lpdf = 1:d
+                            pdf = pdf.*betapdf(xnew(:,lpdf), 1, 1)/(range(l,2)-range(l,1));
+                        <span class="keyword">end</span>
+                        weightnew = weightnew.*pdf;
+                    <span class="keyword">end</span>
+                <span class="keyword">elseif</span> strcmpi(gridtype, <span class="string">'clenshaw-curtis'</span>)
+                    weightnew = feval(wgen, levelseq, kstart, kend);
+                <span class="keyword">end</span>
+            <span class="keyword">end</span>
+
+			ptsfrom = 1;
+			<span class="keyword">for</span> k = kstart:kend
+				npoints = ptslen(k);
+				ptsend = ptsfrom + npoints - 1;
+				<span class="keyword">for</span> l = 1:nresults
+                    <span class="keyword">switch</span> problemType
+                        <span class="keyword">case</span> <span class="string">'interpolation'</span>
+                            indicator(l) = sum(abs(znew{l}(ptsfrom:ptsend)))/double(npoints);
+                            E(l,k) = max(abs(znew{l}(ptsfrom:ptsend)));
+                        <span class="keyword">case</span> <span class="string">'integration'</span>
+                            indicator(l) = abs(sum(znew{l}(ptsfrom:ptsend).*weightnew(ptsfrom:ptsend)))/double(npoints);<span class="comment">%</span>
+                            E(l,k) = abs(sum(znew{l}(ptsfrom:ptsend).*weightnew(ptsfrom:ptsend)));<span class="comment">% /double(npoints)</span>
+                        <span class="keyword">otherwise</span>
+                            disp(<span class="string">'choose between interpolation and integration'</span>);
+                    <span class="keyword">end</span>
+				<span class="keyword">end</span>
+				ptsfrom = ptsend + 1;
+
+				G(k) = max(indicator);
+
+				<span class="comment">% add new index to the set of active indices</span>
+				na = na + 1;
+				A(na) = k;
+				A = sortheap(A, double(na), G);
+				nap = nap + 1;
+				Ap(nap) = k;
+				Ap = sortheap(Ap, double(nap), G2);
+            <span class="keyword">end</span>
+
+			<span class="keyword">for</span> l = 1:nresults
+				z{l} = [z{l}; znew{l}];
+                <span class="keyword">if</span>  strcmpi(keepWeight, <span class="string">'on'</span>)
+                    weight = [weight; weightnew];
+                <span class="keyword">end</span>
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+
+	<span class="comment">% Compute new error only if any new indices were added, and if we know</span>
+	<span class="comment">% the algorithm could abort after this step.</span>
+    <span class="keyword">if</span> ni &gt; niold &amp;&amp; (ntotalpoints &gt;= minPoints || all(maxlevel == maxDepth))
+        <span class="comment">% Compute relative error estimator</span>
+        <span class="keyword">if</span> all(zmax-zmin) &gt; 0
+          <span class="keyword">for</span> l2 = 1:nresults
+            maxsurplus(l2) = 0;
+            <span class="comment">% Loop over active indices, first criterium</span>
+            <span class="keyword">for</span> l = 1:na
+              <span class="comment">% Check if it is still an active index (might have been</span>
+              <span class="comment">% processed by other criterium)</span>
+              <span class="keyword">if</span> active(A(l)) == true
+                temp = E(l2,A(l));
+                <span class="keyword">if</span> temp &gt; maxsurplus(l2)
+                  maxsurplus(l2) = temp;
+                <span class="keyword">end</span>
+              <span class="keyword">end</span>
+            <span class="keyword">end</span>
+            <span class="comment">% Loop over active indices, second criterium</span>
+            <span class="keyword">for</span> l = 1:nap
+              <span class="comment">% Check if it is still an active index (might have been</span>
+              <span class="comment">% processed by other criterium)</span>
+              <span class="keyword">if</span> active(Ap(l)) == true
+                temp = E(l2,Ap(l));
+                <span class="keyword">if</span> temp &gt; maxsurplus(l2)
+                  maxsurplus(l2) = temp;
+                <span class="keyword">end</span>
+              <span class="keyword">end</span>
+            <span class="keyword">end</span>
+          <span class="keyword">end</span>
+          accuracy = max(maxsurplus./(zmax-zmin));
+       <span class="keyword">else</span>
+          accuracy = inf;
+       <span class="keyword">end</span>
+       absaccuracy = max(maxsurplus);
+
+       <span class="keyword">if</span> strcmpi(problemType, <span class="string">'integration'</span>)
+           maxsurplus = zeros(1,nresults);
+           <span class="keyword">for</span> l = 1:na
+               <span class="keyword">if</span> active(A(l)) == true
+                   <span class="keyword">for</span> l2 = 1:nresults
+                        maxsurplus(l2) = maxsurplus(l2) + E(l2,A(l));
+                   <span class="keyword">end</span>
+               <span class="keyword">end</span>
+           <span class="keyword">end</span>
+           absaccuracy = max(maxsurplus);
+       <span class="keyword">end</span>
+
+        <span class="comment">% break if desired relative accuracy is reached, or if desired</span>
+        <span class="comment">% absolute tolerance is reached, but only if the minimum number</span>
+        <span class="comment">% of levels have been computed. Do this over all accuracies</span>
+        <span class="comment">% in the active set.</span>
+        <span class="keyword">if</span> (accuracy &lt;= reltol || absaccuracy &lt;= abstol)
+            <span class="keyword">if</span> atleastonestep, success = 1; <span class="keyword">end</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+</pre><h2>% verification for the newly added indices<a name="3"></a></h2><pre class="codeinput">    <span class="keyword">if</span> ~success &amp;&amp; strcmpi(verification, <span class="string">'on'</span>) &amp;&amp; (ni &gt; niold)
+        verficationActive = active;
+        verificationA = A;
+        verificationNa = na;
+        verificationE = E;
+        verificationKstart = kstart;
+        verificationKend = kend;
+        <span class="keyword">for</span> vi = verificationKstart:verificationKend
+            <span class="comment">% absolute accuracy for interpolation</span>
+            maxsurplus = zeros(1,nresults);
+            <span class="keyword">for</span> l2 = 1:nresults
+                maxsurplus(l2) = verificationE(l2,vi);
+            <span class="keyword">end</span>
+            verificationAbsaccuracy = max(maxsurplus);
+            <span class="comment">% absolute accuracy for integration</span>
+           <span class="keyword">if</span> strcmpi(problemType, <span class="string">'integration'</span>)
+               maxsurplus = zeros(1,nresults);
+               <span class="keyword">for</span> la = 1:verificationNa
+                   <span class="keyword">if</span> verficationActive(verificationA(la)) == true
+                       <span class="keyword">for</span> l2 = 1:nresults
+                            maxsurplus(l2) = maxsurplus(l2) + verificationE(l2,verificationA(la));
+                       <span class="keyword">end</span>
+                   <span class="keyword">end</span>
+               <span class="keyword">end</span>
+               verificationAbsaccuracy = max(maxsurplus);
+           <span class="keyword">end</span>
+
+           <span class="keyword">if</span> verificationAbsaccuracy &lt;= abstol
+                currentindex = vi;
+
+                <span class="comment">% indicate old index set</span>
+                active(currentindex) = false;
+
+                nfi = nfi + 1;
+                <span class="comment">% Resize forward neighbor array if necessary</span>
+                <span class="keyword">if</span> nfi &gt; maxforwardind
+                      maxforwardind = ceil(maxforwardind * RESIZE_FACTOR);
+                      addind = maxforwardind - size(forward, 1);
+                      forward = [forward; zeros(addind,d,<span class="string">'uint32'</span>)];
+                <span class="keyword">end</span>
+                forwardAddr(currentindex) = nfi;
+
+                <span class="comment">% Get all the backward neighbors</span>
+                nbid = indicesNDims(currentindex);
+                tmpaddr = indicesAddr(currentindex);
+                j = uint8(1);
+
+                <span class="comment">% Corrected bug: initialization of level vector was missing!</span>
+                level = zeros(d,1,<span class="string">'uint8'</span>);
+
+                <span class="keyword">while</span> j &lt;= nbid
+                    bdim(j)  = indicesDims(tmpaddr);
+                    bid(j)   = backward(tmpaddr);
+                    level(bdim(j)) = indicesLevs(tmpaddr);
+                    tmpaddr = tmpaddr + 1;
+                    j = j + 1;
+                <span class="keyword">end</span>
+
+                i = uint16(1);
+
+                <span class="comment">% Resize arrays if necessary</span>
+                <span class="keyword">if</span> ni+uint32(d) &gt; maxind
+                    maxind = ceil(maxind * RESIZE_FACTOR);
+                    addind = max(double(d), double(maxind) - size(indicesNDims, 1));
+                    maxind = uint32(size(indicesNDims,1) + addind);
+
+                    indicesNDims = [indicesNDims; zeros(addind,1,<span class="string">'uint8'</span>)];
+                    indicesDims  = [indicesDims; zeros(addind*min_nd,1,<span class="string">'uint16'</span>)];
+                    indicesLevs  = [indicesLevs; zeros(addind*min_nd,1,<span class="string">'uint8'</span>)];
+                    indicesAddr  = [indicesAddr; zeros(addind,1,<span class="string">'uint32'</span>)];
+
+                    <span class="comment">% Neighbor data</span>
+                    backward     = [backward; zeros(addind*min_nd,1,<span class="string">'uint32'</span>)];
+                    forwardAddr  = [forwardAddr; zeros(addind,1,<span class="string">'uint32'</span>)];
+
+                    <span class="comment">% Store start adresses of a sub-grid in the support node array</span>
+                    ptsaddr      = [ptsaddr; zeros(addind,1, <span class="string">'uint32'</span>)];
+                    ptslen       = [ptslen; zeros(addind,1, <span class="string">'uint32'</span>)];
+
+                    <span class="comment">% Indicate active/passive indices</span>
+                    active       = [active; false(addind,1)];
+
+                    <span class="comment">% Array containing ID's of active indices, ordered by</span>
+                    <span class="comment">% error/number of points</span>
+                    A            = [A; zeros(addind,1,<span class="string">'uint32'</span>)];
+                    Ap           = [Ap; zeros(addind,1,<span class="string">'uint32'</span>)];
+                    E            = [E zeros(nresults, addind)];
+                    G            = [G; zeros(addind, 1)];
+                    G2           = [G2; zeros(addind, 1)];
+                <span class="keyword">end</span>
+
+                niold = ni;
+                <span class="keyword">while</span> i &lt;= d
+                    <span class="comment">% check if maximum depth is exceeded</span>
+                    <span class="keyword">if</span> level(i) + 1 &gt; maxDepth
+                        i = i + 1;
+                        <span class="keyword">continue</span>;
+                    <span class="keyword">end</span>
+
+                    <span class="comment">% check if a new index in direction l is admissible</span>
+                    isadmissible = true;
+
+                    j = uint8(1);
+                    <span class="keyword">while</span> j &lt;= nbid
+                          <span class="keyword">if</span> i == bdim(j)
+                            j = j + 1;
+                            <span class="keyword">continue</span>;
+                          <span class="keyword">end</span>
+                          forwardid = forwardAddr(bid(j));
+                          <span class="keyword">if</span> forwardid == 0
+                            isadmissible = false;
+                            <span class="keyword">break</span>;
+                          <span class="keyword">end</span>
+                          backofnew = forward(forwardid,i);
+                          <span class="keyword">if</span> backofnew == 0
+                            isadmissible = false;
+                            <span class="keyword">break</span>;
+                          <span class="keyword">elseif</span> active(backofnew)
+                            isadmissible = false;
+                            <span class="keyword">break</span>;
+                          <span class="keyword">else</span>
+                            bn(bdim(j)) = backofnew;
+                          <span class="keyword">end</span>
+                          j = j + 1;
+                    <span class="keyword">end</span>
+
+                    <span class="keyword">if</span> isadmissible
+                          atleastonestep = 1;
+                          bn(i) = currentindex;
+                          addr = indicesAddr(ni)+uint32(indicesNDims(ni));
+                          ni = ni + 1;
+
+                          indicesAddr(ni) = addr;
+
+                          <span class="keyword">if</span> maxlevel(i) &lt; level(i) + 1;
+                            maxlevel(i) = level(i) + 1;
+                          <span class="keyword">end</span>
+
+                          <span class="keyword">if</span> nbid == 0
+                                nnewdims = uint8(1);
+                                indicesDims(addr) = i;
+                                indicesLevs(addr) = uint8(1);
+                                backward(addr) = bn(i);
+                                forward(forwardAddr(bn(i)),i) = ni;
+                                npoints = uint32(2);
+                                addr = addr + 1;
+                                nisum = 1;
+                          <span class="keyword">else</span>
+                                j = uint8(1);
+                                insert = true;
+                                nnewdims = uint8(0);
+                                npoints = uint32(1);
+                                nisum = 0;
+                                nbidtemp = nbid;   <span class="comment">% use temporary variable, since nbid</span>
+                                                   <span class="comment">% must not change; it is not updated in</span>
+                                                   <span class="comment">% case other admissible indices are</span>
+                                                   <span class="comment">% found!</span>
+                                <span class="keyword">while</span> j &lt;= nbidtemp
+                                      nnewdims = nnewdims + 1;
+                                      id = bdim(j);
+                                      <span class="keyword">if</span> i &gt; id
+                                            lev = level(id);
+                                            j  = j + 1;
+                                            <span class="keyword">if</span> insert &amp;&amp; j &gt; nbidtemp
+                                              bdim(nbidtemp+1) = i;
+                                              level(i) = 0;
+                                              nbidtemp = nbidtemp + 1;
+                                            <span class="keyword">end</span>
+                                      <span class="keyword">elseif</span> i == id
+                                            insert = false;
+                                            lev = level(id) + 1;
+                                            j = j + 1;
+                                      <span class="keyword">elseif</span> insert
+                                            insert = false;
+                                            lev = uint8(1);
+                                            id = i;
+                                      <span class="keyword">else</span>
+                                            lev = level(id);
+                                            j = j + 1;
+                                      <span class="keyword">end</span>
+
+                                      forward(forwardAddr(bn(id)),id) = ni;
+                                      indicesDims(addr) = id;
+                                      indicesLevs(addr) = lev;
+                                      backward(addr) = bn(id);
+
+                                      <span class="comment">% Compute the number of gridpoints</span>
+                                      <span class="keyword">if</span> isgp == 1
+                                            npoints = npoints * 2^uint32(lev);
+                                      <span class="keyword">else</span>
+                                            <span class="keyword">if</span> lev &lt; 3
+                                                npoints = npoints * 2;
+                                            <span class="keyword">else</span>
+                                                npoints = npoints * 2^uint32(lev-1);
+                                            <span class="keyword">end</span>
+                                      <span class="keyword">end</span>
+
+                                      <span class="comment">% Compute index sum</span>
+                                      nisum = nisum + double(lev);
+
+                                      addr = addr + 1;
+                                <span class="keyword">end</span>
+                           <span class="keyword">end</span>
+                          indicesNDims(ni) = nnewdims;
+                          ptslen(ni) = npoints;
+                          ptsaddr(ni) = ptsaddr(ni-1) + ptslen(ni-1);
+                          active(ni) = true;
+                          ntotalpoints = ntotalpoints + npoints;
+
+                          <span class="keyword">if</span> pickedAdaptive
+                              nadaptpoints = nadaptpoints + npoints;
+                          <span class="keyword">end</span>
+
+                          <span class="comment">% update current maximum number of points per index set</span>
+                          maxsetpoints = max(maxsetpoints, nisum);
+
+                          <span class="comment">% update second error indicator</span>
+                          G2(ni) = 1./double(nisum);
+                     <span class="keyword">end</span>
+                     i = i + 1;
+                <span class="keyword">end</span>
+
+                <span class="keyword">if</span> ni &gt; niold
+                    levelseq = struct(<span class="string">'indicesNDims'</span>, indicesNDims, <span class="keyword">...</span>
+                                      <span class="string">'indicesDims'</span>, indicesDims, <span class="keyword">...</span>
+                                      <span class="string">'indicesLevs'</span>, indicesLevs, <span class="keyword">...</span>
+                                      <span class="string">'indicesAddr'</span>, indicesAddr, <span class="keyword">...</span>
+                                      <span class="string">'forwardAddr'</span>, forwardAddr, <span class="keyword">...</span>
+                                      <span class="string">'forwardNeighbors'</span>, forward, <span class="keyword">...</span>
+                                      <span class="string">'backwardNeighbors'</span>, backward, <span class="keyword">...</span>
+                                      <span class="string">'subGridPoints'</span>, ptslen, <span class="keyword">...</span>
+                                      <span class="string">'subGridAddr'</span>, ptsaddr);
+
+                    kend = niold;
+                    <span class="keyword">while</span> kend &lt; ni
+                        <span class="comment">% Compute new function values for new index sets</span>
+                        t0 = clock;
+
+                        psize = 0;
+                        kstart = kend+1;
+                        <span class="keyword">while</span> psize &lt; MAX_X_SIZE &amp;&amp; kend &lt; ni
+                            psize = psize + ptslen(kend) * double(d);
+                            kend = kend + 1;
+                        <span class="keyword">end</span>
+                        [znew(1:nresults), xnew] = <span class="keyword">...</span>
+                                spevalf(gridgen, f, levelseq, d, [kstart, kend], <span class="keyword">...</span>
+                                                range, varpos, vectorized, nresults, <span class="keyword">...</span>
+                                                functionArgType,val{:});
+
+                        <span class="keyword">if</span> strcmpi(keepFunctionValues, <span class="string">'on'</span>)
+                            <span class="keyword">for</span> l = 1:nresults
+                                y{l} = [y{l}; znew{l}];
+                            <span class="keyword">end</span>
+                        <span class="keyword">end</span>
+
+                        <span class="keyword">if</span> strcmpi(keepGrid, <span class="string">'on'</span>)
+                            <span class="comment">% Rescale sparse grid to actual range</span>
+                            xnew2 = xnew;
+                            <span class="keyword">for</span> l = 1:d
+                                xnew2(:,l) = range(l,1)+(range(l,2)-range(l,1)).*xnew2(:,l);
+                            <span class="keyword">end</span>
+                            x = [x; xnew2];
+                        <span class="keyword">end</span>
+
+                        fevalTime = fevalTime + etime(clock,t0);
+                        <span class="keyword">for</span> l = 1:nresults
+                            [temp, id] = min(znew{l}(:));
+                            <span class="keyword">if</span> temp &lt; zmin(l)
+                                zmin(l) = temp;
+                                xmin(l,:) = xnew(id,:);
+                            <span class="keyword">end</span>
+                            [temp, id] = max(znew{l}(:));
+                            <span class="keyword">if</span> temp &gt; zmax(l)
+                                zmax(l) = temp;
+                                xmax(l,:) = xnew(id,:);
+                            <span class="keyword">end</span>
+                        <span class="keyword">end</span>
+
+                        t0 = clock;
+                        <span class="keyword">for</span> l = 1:nresults
+                            znew{l} = znew{l} - feval(ipmethod, d, z{l}, xnew, <span class="keyword">...</span>
+                                                                                levelseq, kstart, kend);
+                        <span class="keyword">end</span>
+                        <span class="keyword">if</span>  strcmpi(gridtype, <span class="string">'chebyshev'</span>)
+                            <span class="keyword">for</span> l = 1:nresults
+                                znew{l} = reordervals(znew{l},levelseq, kstart, kend);
+                            <span class="keyword">end</span>
+                        <span class="keyword">end</span>
+                        surplusCompTime = surplusCompTime + etime(clock,t0);
+
+                        <span class="keyword">if</span>  strcmpi(keepWeight, <span class="string">'on'</span>)
+                            <span class="comment">% compute new quadrature weight</span>
+                            address = sum(levelseq.indicesNDims(1:kstart-1))+1:sum(levelseq.indicesNDims(1:kend));
+                            <span class="keyword">if</span>  strcmpi(gridtype, <span class="string">'chebyshev'</span>)
+                                maxn = double(max(levelseq.indicesLevs(address)));
+                                [w1d, id] = feval(wtype, maxn);
+                                weightnew = feval(wgen,levelseq,w1d,id,kstart,kend);
+                            <span class="keyword">elseif</span> strcmpi(gridtype, <span class="string">'gauss-patterson'</span>)
+                                maxn = double(max(levelseq.indicesLevs(address)));
+                                [w1d, id] = feval(wtype, maxn);
+                                weightnew = feval(wgen,levelseq,w1d,id,kstart,kend);
+                                <span class="keyword">if</span> strcmpi(distributionType, <span class="string">'beta'</span>)
+                                    pdf = ones(size(xnew,1),1);
+                                    <span class="keyword">for</span> lpdf = 1:d
+                                        pdf = pdf.*betapdf(xnew(:,lpdf), l, l)/(range(l,2)-range(l,1));
+                                    <span class="keyword">end</span>
+                                    weightnew = weightnew.*pdf;
+                                <span class="keyword">end</span>
+                            <span class="keyword">elseif</span> strcmpi(gridtype, <span class="string">'clenshaw-curtis'</span>)
+                                weightnew = feval(wgen, levelseq, kstart, kend);
+                            <span class="keyword">end</span>
+                        <span class="keyword">end</span>
+
+                        ptsfrom = 1;
+                        <span class="keyword">for</span> k = kstart:kend
+                            npoints = ptslen(k);
+                            ptsend = ptsfrom + npoints - 1;
+                            <span class="keyword">for</span> l = 1:nresults
+                                <span class="keyword">switch</span> problemType
+                                    <span class="keyword">case</span> <span class="string">'interpolation'</span>
+                                        indicator(l) = sum(abs(znew{l}(ptsfrom:ptsend)))/double(npoints);
+                                        E(l,k) = max(abs(znew{l}(ptsfrom:ptsend)));
+                                    <span class="keyword">case</span> <span class="string">'integration'</span>
+                                        indicator(l) = abs(sum(znew{l}(ptsfrom:ptsend).*weightnew(ptsfrom:ptsend)))/double(npoints);<span class="comment">%</span>
+                                        E(l,k) = abs(sum(znew{l}(ptsfrom:ptsend).*weightnew(ptsfrom:ptsend)));<span class="comment">% /double(npoints)</span>
+                                    <span class="keyword">otherwise</span>
+                                        disp(<span class="string">'choose between interpolation and integration'</span>);
+                                <span class="keyword">end</span>
+                            <span class="keyword">end</span>
+                            ptsfrom = ptsend + 1;
+
+                            G(k) = max(indicator);
+
+                            <span class="comment">% add new index to the set of active indices</span>
+                            na = na + 1;
+                            A(na) = k;
+                            A = sortheap(A, double(na), G);
+                            nap = nap + 1;
+                            Ap(nap) = k;
+                            Ap = sortheap(Ap, double(nap), G2);
+                        <span class="keyword">end</span>
+
+                        <span class="keyword">for</span> l = 1:nresults
+                            z{l} = [z{l}; znew{l}];
+                            <span class="keyword">if</span>  strcmpi(keepWeight, <span class="string">'on'</span>)
+                                weight = [weight; weightnew];
+                            <span class="keyword">end</span>
+                        <span class="keyword">end</span>
+                    <span class="keyword">end</span>
+                <span class="keyword">end</span>
+
+
+<span class="comment">%                     % stop further construction from the newly added index</span>
+<span class="comment">%                     for kactive = kstart:kend</span>
+<span class="comment">%                         % absolute accuracy for interpolation</span>
+<span class="comment">%                         maxsurplus = zeros(1,nresults);</span>
+<span class="comment">%                         for l2 = 1:nresults</span>
+<span class="comment">%                             maxsurplus(l2) = E(l2,kactive);</span>
+<span class="comment">%                         end</span>
+<span class="comment">%                         absaccuracy = max(maxsurplus);</span>
+<span class="comment">%                         % absolute accuracy for integration</span>
+<span class="comment">%                         if strcmpi(problemType, 'integration')</span>
+<span class="comment">%                            maxsurplus = zeros(1,nresults);</span>
+<span class="comment">%                            for la = 1:na</span>
+<span class="comment">%                                if active(A(la)) == true</span>
+<span class="comment">%                                    for l2 = 1:nresults</span>
+<span class="comment">%                                         maxsurplus(l2) = maxsurplus(l2) + E(l2,A(la));</span>
+<span class="comment">%                                    end</span>
+<span class="comment">%                                end</span>
+<span class="comment">%                            end</span>
+<span class="comment">%                            absaccuracy = max(maxsurplus);</span>
+<span class="comment">%                         end</span>
+<span class="comment">%                         if absaccuracy &lt;= abstol</span>
+<span class="comment">%                             active(kactive) = false;</span>
+<span class="comment">%                         end</span>
+<span class="comment">%                     end</span>
+
+           <span class="keyword">end</span>
+
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+
+
+
+<span class="comment">%     disp(['success 2 = ',num2str(success)])</span>
+</pre><h2>end of the adaptive construction<a name="4"></a></h2><pre class="codeinput"><span class="keyword">end</span>
+
+<span class="keyword">if</span> ~atleastonestep
+      warning(<span class="string">'MATLAB:spinterp:maxDepthReached'</span>, <span class="keyword">...</span>
+              [<span class="string">'No more active indices left, returning previous result. '</span> <span class="keyword">...</span>
+                         <span class="string">'Restart the calculation with a higher MaxDepth '</span> <span class="keyword">...</span>
+                         <span class="string">'setting.'</span>]);
+      <span class="keyword">if</span> ~isempty(zprev)
+          z = zprev;
+          <span class="keyword">return</span>;
+      <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="keyword">if</span> ~success
+      <span class="keyword">if</span> ntotalpoints &gt;= maxPoints
+            warning(<span class="string">'MATLAB:spinterp:maxPointsReached'</span>, <span class="keyword">...</span>
+                   [<span class="string">'Current number of support nodes nPoints = '</span> <span class="keyword">...</span>
+                    num2str(ntotalpoints) <span class="string">':'</span> <span class="keyword">...</span>
+                    <span class="string">' MaxPoints = '</span> num2str(maxPoints) <span class="keyword">...</span>
+                    <span class="string">' reached before accuracies'</span> <span class="keyword">...</span>
+                            <span class="string">' RelTol = '</span> num2str(reltol) <span class="string">' or AbsTol = '</span> num2str(abstol) <span class="keyword">...</span>
+                            <span class="string">' were achieved.\nThe current'</span> <span class="keyword">...</span>
+                            <span class="string">' estimated relative accuracy is '</span> num2str(accuracy) <span class="keyword">...</span>
+                            <span class="string">'. Increase maximum number of allowable points MaxPoints'</span> <span class="keyword">...</span>
+                    <span class="string">' to further refine the interpolant. '</span>]);
+      <span class="keyword">else</span>
+            warning(<span class="string">'MATLAB:spinterp:maxDepthReached'</span>, <span class="keyword">...</span>
+                    [<span class="string">'No more active indices left. Restart the calculation '</span> <span class="keyword">...</span>
+                                 <span class="string">'with a higher MaxDepth setting to further refine the '</span> <span class="keyword">...</span>
+                                 <span class="string">'interpolant.'</span>]);
+      <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">% Store results in structure</span>
+ztemp = z;
+clear <span class="string">z</span>;
+z.vals = ztemp;
+<span class="keyword">if</span>  strcmpi(keepWeight, <span class="string">'on'</span>)
+    z.weight = weight;
+<span class="keyword">end</span>
+z.gridType = gridtype;
+z.d = double(d);
+z.range = range;
+z.estRelError = accuracy;
+z.estAbsError = absaccuracy;
+z.fevalRange = [zmin zmax];
+z.minGridVal = xmin;
+z.maxGridVal = xmax;
+z.nPoints = ntotalpoints;
+z.success = success;
+
+z.dimadaptDegree = double(nadaptpoints)/double(ntotalpoints);
+<span class="comment">% if isps</span>
+<span class="comment">% 	z.dimadaptDegree = double(nadaptpoints)/double(ntotalpoints);</span>
+<span class="comment">% end</span>
+z.fevalTime = fevalTime;
+z.surplusCompTime = surplusCompTime;
+
+levelseq = struct(<span class="string">'indicesNDims'</span>, indicesNDims(1:ni), <span class="keyword">...</span>
+                  <span class="string">'indicesDims'</span>, indicesDims(1:addr-1), <span class="keyword">...</span>
+                  <span class="string">'indicesLevs'</span>, indicesLevs(1:addr-1), <span class="keyword">...</span>
+                  <span class="string">'indicesAddr'</span>, indicesAddr(1:ni), <span class="keyword">...</span>
+                  <span class="string">'active'</span>, active(1:ni), <span class="keyword">...</span>
+                  <span class="string">'forwardAddr'</span>, forwardAddr(1:ni), <span class="keyword">...</span>
+                  <span class="string">'forwardNeighbors'</span>, forward(1:nfi,:), <span class="keyword">...</span>
+                  <span class="string">'backwardNeighbors'</span>, backward(1:addr-1), <span class="keyword">...</span>
+                  <span class="string">'subGridPoints'</span>, ptslen(1:ni), <span class="keyword">...</span>
+                  <span class="string">'subGridAddr'</span>, ptsaddr(1:ni));
+
+z.indices = levelseq;
+z.maxLevel = maxlevel;
+
+z.activeIndices = A(1:na);
+z.activeIndices2 = Ap(1:nap);
+z.E = E(:,1:ni);
+z.G = G(1:ni);
+z.G2 = G2(1:ni);
+z.maxSetPoints = maxsetpoints;
+z.dimAdapt = true;
+
+<span class="keyword">if</span> strcmpi(keepFunctionValues, <span class="string">'on'</span>)
+    z.fvals = y;
+<span class="keyword">end</span>
+<span class="keyword">if</span> strcmpi(keepGrid, <span class="string">'on'</span>)
+    z.grid = {x};
+<span class="keyword">end</span>
+</pre><pre class="codeoutput error">Error using evalin
+Undefined function or variable 'spadaptvals'.
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function z = spadaptvals(f, d, range, options, varargin)
+% SPADAPTVALS   Compute hierarchical surpluses dimension-adaptively
+% Computes the sparse grid representation of a function using 
+% dimension-adaptive sparse grids. The calling options are identical 
+% to SPVALS (internal function).
+
+% Author : Andreas Klimke, Universitaet Stuttgart
+% Version: 2.3
+% Date   : April 10, 2008
+
+% Change log:
+% V1.0   : April 22, 2004
+%          Initial version
+% V1.1   : January 12, 2005
+%          Corrected computation of relative estimated error;
+%          Removed storing of Grel and Gabs, not required.
+% V1.2   : March 28, 2005
+%          Completely revised version using sparse index arrays.
+% V1.3   : April 16, 2005
+%          Corrected serious bug incolving correct value of nbid.
+% V1.4   : May 23, 2005
+%          Corrected bug involving memory allocation of forward
+%          neighbor array (used maxind instead of maxforwardind in
+%          new size calculation). Corrected bug in memory
+%          allocation concerning maxind variable (used wrong
+%          length). 
+% V1.5   : August 11, 2005
+%          Corrected bug involving addr variable which was used
+%          twice in a different context. Changed one to tmpaddr
+% V1.6   : September 02, 2005
+%          Altered structure assignment to avoid warning in new 
+%          Matlab release R14SP2. 
+% V1.7   : December 30, 2005
+%          Removed serious bug that occurred in higher dimensions
+%          resulting from a false re-ordering result from 
+%          sortheap and popheap. The reason for this was the mixing
+%          of double and uint32 data types (popheap.m and pushheap.m
+%          were not written to get uint32 type arguments).
+% V1.8   : January 23, 2006
+%          Removed bug: Set dimadaptDegree to 0.9, as described in
+%          the documentation.
+% V1.9   : June 7, 2006
+%          Updated warning message to be more meaningful
+% V2.0   : September 30, 2007
+%          Improved allocation of grid point array to allow 
+%          dimensions up to d = 65534.
+% V2.1   : December 15, 2007
+%          Fixed bug with levels vector not being cleared
+%          Added handling of Gauss-Patterson grid
+%          Added enforcement of maximum depth
+% V2.2   : January 20, 2008
+%          Added points strategy for measuring degree of dimensional
+%          adaptivity. 
+% V2.3   : April 10, 2008
+%          Fixed Out of range value or NaN computed in integer arithmetic
+%          warning occurring in Matlab v7.4.0.287, R2007a.
+
+% Author : Peng Chen
+% Version: 1.0
+% Date   : October 2, 2013
+%          Fixed bug for DegreeStrategy; implement hierarchical integration
+
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+% Sparse Grid Interpolation Toolbox
+% Copyright (c) 2006 W. Andreas Klimke, Universitaet Stuttgart 
+% Copyright (c) 2007-2008 W. A. Klimke. All Rights Reserved.
+% See LICENSE.txt for license. 
+% email: klimkeas@ians.uni-stuttgart.de
+% web  : http://www.ians.uni-stuttgart.de/spinterp
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+
+% CONSTANTS
+RESIZE_FACTOR = 1.5;
+MAX_X_SIZE = 1e7;
+
+d = uint16(d);
+	
+if nargin < 3, range = []; end
+if nargin < 4, options = []; end
+if nargin < 5, varargin = {}; end
+
+vectorized = spget(options, 'Vectorized', 'off');
+zprev = spget(options, 'PrevResults');
+varpos = spget(options, 'VariablePositions');
+nresults = spget(options, 'NumberOfOutputs', 1);
+reltol = spget(options, 'RelTol', 1e-2);
+abstol = spget(options, 'AbsTol', 1e-6);
+gridtype = spget(options, 'GridType', 'Clenshaw-Curtis');
+functionArgType = spget(options, 'FunctionArgType', 'list');
+keepFunctionValues = spget(options, 'KeepFunctionValues', 'off');
+keepGrid = spget(options, 'KeepGrid', 'off');
+minPoints = spget(options, 'MinPoints', 100);
+maxPoints = spget(options, 'MaxPoints', 10000);
+problemType = spget(options, 'ProblemType', 'interpolation');
+verification = spget(options, 'Verification', 'off');
+keepWeight = spget(options, 'KeepWeight', 'off');
+distributionType = spget(options, 'DistributionType', 'uniform');
+
+if strcmpi(gridtype, 'gauss-patterson') 
+	nmax = spget(options, 'MaxDepth', 6);
+	if nmax > 6
+		warning('MATLAB:spinterp:badopt',['Maximum supported depth ' ...
+		  'level for the Gauss-Patterson grid is 6, but MaxDepth ' ...
+			'was set to ' num2str(nmax) '. Using MaxDepth = 6 instead.']);
+		nmax = 6;
+	end
+elseif strcmpi(gridtype, 'chebyshev')
+  nmax = spget(options, 'MaxDepth', 10);
+	if nmax > 10
+		warning('MATLAB:spinterp:badopt',['Maximum supported depth ' ...
+		  'level for the Chebyshev grid is 10, but MaxDepth ' ...
+			'was set to ' num2str(nmax) '. Using MaxDepth = 10 instead.']);
+		nmax = 10;
+	end
+else
+  nmax = 255;
+end
+maxDepth = nmax;
+
+enableDCT = spget(options, 'EnableDCT', 'on');
+w = spget(options, 'DimadaptDegree', 0.9);
+strat = spget(options, 'DegreeStrategy', 'balancing');
+if strcmpi(strat, 'balancing'), isps = 1; else isps = 0; end
+
+isgp = 0;
+switch lower(gridtype)
+ case 'clenshaw-curtis'
+  ipmethod = 'spcmpvalsccsp';
+  gridgen = 'spgridccsp';
+  wgen    = 'spquadwccspadapt';
+ case 'chebyshev'
+	if strcmpi(enableDCT, 'off')
+		ipmethod = 'spcmpvalscbsp';
+	else
+		ipmethod = 'spcmpvalscbspdct';
+	end			
+  gridgen = 'spgridcbsp';
+  wgen    = 'spquadwcbspadapt';
+  wtype   = 'chebweights';
+ case 'gauss-patterson'
+  ipmethod = 'spcmpvalsgpsp';
+  gridgen = 'spgridgpsp';
+  wgen    = 'spquadwgpspadapt';
+  wtype   = 'gpweights';
+	isgp = 1;
+end
+
+% Initialize time and feval counters
+fevalTime = 0;
+surplusCompTime = 0;
+ntotalpoints = 0;
+
+if minPoints > maxPoints
+  minPoints = maxPoints;
+end
+
+min_nd = min(maxDepth, double(d));
+
+% shift the interpolation parameters to the right position, and
+% fill field up with any parameters in varargin.
+val = posvars(d, varpos, varargin{:});
+
+if isempty(zprev)
+  % Allocate some memory for the index set arrays; this is resized
+  % as necessary.
+  maxind = max(10, floor(65536/double(d)));
+  maxforwardind = max(10, floor(65536/double(d)));
+  
+  % Vector to store maximum level in each dimension
+  maxlevel = zeros(1,d);
+  
+  % Indices data
+  indicesNDims = zeros(maxind,1,'uint8');
+  indicesDims  = zeros(maxind*min_nd,1,'uint16');
+  indicesLevs  = zeros(maxind*min_nd,1,'uint8');
+  indicesAddr  = zeros(maxind,1,'uint32');
+  
+  % Neighbor data
+  backward     = zeros(maxind*min_nd,1,'uint32');
+  forwardAddr  = zeros(maxind,1,'uint32');
+  forward      = zeros(maxforwardind,d,'uint32');
+  
+  % Indicate active/passive indices (only necessary for
+  % construction of the grid)
+  active       = false(maxind,1);
+  % Array containing ID's of active indices, ordered by error/number of
+  % points  
+  A            = zeros(maxind,1,'uint32');
+  Ap           = zeros(maxind,1,'uint32');
+  
+  % Store start adresses of a sub-grid in the support node array
+  ptsaddr      = zeros(maxind,1, 'uint32');  
+  ptslen       = zeros(maxind,1, 'uint32');
+  
+  % Initialize with first index; There are no values to be inserted
+  % in the indices array, since the first index is (0,...,0). (We
+  % start from 0 REPLACE_WITH_DASH_DASH this also results in the sparse structure of
+  % the array).
+  currentindex = uint32(1);
+  
+  % Global error indicator
+  E = zeros(nresults,maxind);
+  G = zeros(maxind,1);
+  
+  % Conventional sparse grid ordering
+  G2 = zeros(maxind,1);
+  
+  % number of active index sets
+  na = uint32(1);
+  nap = uint32(1);
+  
+  % total number of index sets
+  ni = uint32(1);
+  
+  % number of forward neighbor sets
+  nfi = uint32(0);
+  
+  % Initialize the index set data for the first index
+  indicesNDims(1)  = 0;
+  indicesAddr(1)   = 1;
+  addr             = 1;
+  ptslen(1)        = 1;
+  ptsaddr(1)       = 1;
+  active(1)        = true;
+  A(1)             = 1;
+  Ap(1)            = 1;
+  
+  % set initial errors to infinity
+  E(:,1) = inf * ones(nresults,1);
+  G(1) = inf;
+  G2(1) = 1;
+  accuracy = inf;
+  absaccuracy = inf;
+  
+  levelseq = struct('indicesNDims', indicesNDims, ...
+        'indicesDims', indicesDims, ...
+        'indicesLevs', indicesLevs, ...
+        'indicesAddr', indicesAddr, ...
+        'forwardAddr', forwardAddr, ...
+        'forwardNeighbors', forward, ...
+        'backwardNeighbors', backward, ...
+        'subGridPoints', ptslen, ...
+        'subGridAddr', ptsaddr);
+  
+  % Compute new function values for first index set
+  t0 = clock;
+  
+  z = cell(nresults,1);
+  [z(1:nresults), x] = ...
+      spevalf(gridgen, f, levelseq, d, ...
+        [currentindex, currentindex], ...
+        range, varpos, vectorized, nresults, ...
+        functionArgType,val{:}); 
+
+  if strcmpi(keepFunctionValues, 'on')
+    y = z;
+  end
+  if strcmpi(keepGrid, 'on')
+  % Rescale sparse grid to actual range
+    for l = 1:d
+      x(:,l) = range(l,1)+(range(l,2)-range(l,1)).*x(:,l);
+    end
+  end
+  if  strcmpi(keepWeight, 'on')
+      % Compute quadrature weight 
+      weight = 1;
+  end
+  fevalTime = fevalTime + etime(clock,t0);
+  
+  ntotalpoints = ntotalpoints + ptsaddr(1);
+  nadaptpoints = ntotalpoints; % uint32(0);
+  maxsetpoints = 0;
+  
+  % Since the initial subgrid contains only a single point, it is
+  % clear that zmin = z and zmax = z;
+  zmin = cell2mat(z);
+  zmax = cell2mat(z);
+  xmin = repmat(x,nresults,1);
+  xmax = xmin;
+  
+else
+  % get previous results
+  z = zprev.vals;
+  if  strcmpi(keepWeight, 'on')
+      weight = zprev.weight;
+  end
+  gridtype = zprev.gridType;
+  if isfield(zprev, 'fvals')
+    y = zprev.fvals;
+  end
+  if isfield(zprev, 'grid')
+    x = zprev.grid{1};
+  end
+  ntotalpoints = zprev.nPoints;
+  nadaptpoints = uint32(zprev.dimadaptDegree * double(zprev.nPoints));
+% 	if isps
+% 		if isfield(zprev, 'dimadaptDegree')
+% 			nadaptpoints = uint32(zprev.dimadaptDegree * double(zprev.nPoints));
+%         else
+% 		    nadaptpoints = uint32(0);
+% 		end
+% 	end
+  if ntotalpoints >= maxPoints
+    maxPoints = ntotalpoints + 1;
+  end
+  % Indices data
+  indicesNDims = zprev.indices.indicesNDims;
+  indicesDims  = zprev.indices.indicesDims;
+  indicesLevs  = zprev.indices.indicesLevs;
+  indicesAddr  = zprev.indices.indicesAddr;
+  
+  % Neighbor data
+  backward     = zprev.indices.backwardNeighbors;
+  forwardAddr  = zprev.indices.forwardAddr;
+  forward      = zprev.indices.forwardNeighbors;
+  
+  % Indicate active/passive indices (only necessary for
+  % construction of the grid)
+  active       = zprev.indices.active;
+  
+  % Store start adresses of a sub-grid in the support node array
+  ptsaddr      = zprev.indices.subGridAddr;
+  ptslen       = zprev.indices.subGridPoints;
+
+  ni = size(indicesAddr,1);
+  maxind = double(ni);
+  
+  nfi = size(forward,1);
+  maxforwardind = nfi;
+  
+  maxlevel = zprev.maxLevel;
+  
+  na = size(zprev.activeIndices,1);
+  nap = size(zprev.activeIndices2,1);
+  A = zprev.activeIndices;
+  Ap = zprev.activeIndices2;
+  
+  G = zprev.G;
+  G2 = zprev.G2;
+  E = zprev.E;
+
+  zmin = zprev.fevalRange(:,1);
+  zmax = zprev.fevalRange(:,2);
+  xmin = zprev.minGridVal;
+  xmax = zprev.maxGridVal;
+  
+  maxsetpoints = zprev.maxSetPoints;
+  
+  accuracy = zprev.estRelError;
+  absaccuracy = zprev.estAbsError;
+end
+
+% Initialize array of maximum surpluses
+maxsurplus = zeros(nresults,1);
+
+% Initialize array of maximum error indicators
+indicator = zeros(nresults,1);
+
+% Allocate some temporary arrays
+bn    = zeros(d,1,'uint32');
+bdim  = zeros(d,1,'uint16');
+bid   = zeros(d,1,'uint32');
+
+success = 0;
+atleastonestep = 0;
+
+while (ntotalpoints < maxPoints) && ~success
+     ntotalpoints
+
+    % Get next active index to process
+    done = 0;
+    while ~done
+          % Check if conventional rule or error indicator governs next step of the algorithm
+          pickedIndex = false;
+          pickedAdaptive = false;
+          if nap > 0
+                if (~isps && 1/G2(Ap(1)) < (1-min(max(w,0),1)) * maxsetpoints) || ...
+                     (isps && nadaptpoints >= (min(max(w,0),1)) * ntotalpoints)
+                    [currentindex, Ap] = popheap(Ap, double(nap), G2);
+                    pickedIndex = true;
+                    nap = nap - 1;
+                end
+          end
+
+          if ~pickedIndex
+            % Put active index with maximum error into old index set
+                if na > 0
+                      [currentindex, A] = popheap(A, double(na), G);
+                      pickedIndex = true;
+                      pickedAdaptive = true;
+                      na = na - 1;
+                end
+          end
+
+          if ~pickedIndex
+          % No more active index based on error available
+              if nap > 0
+                  [currentindex, Ap] = popheap(Ap, double(nap), G2);
+                  pickedIndex = true;
+                  nap = nap - 1;
+              end
+          end
+
+          if ~pickedIndex
+          % No more indices at all available!
+              break;
+          end
+
+          % Check if still an active index (index may have been processed already due to other criterium)
+          if active(currentindex) == true
+              done = 1;
+          end
+    end
+
+    if ~done, break; end
+
+    % indicate old index set
+    active(currentindex) = false;
+
+    nfi = nfi + 1;
+    % Resize forward neighbor array if necessary
+    if nfi > maxforwardind
+          maxforwardind = ceil(maxforwardind * RESIZE_FACTOR);
+          addind = maxforwardind - size(forward, 1);
+          forward = [forward; zeros(addind,d,'uint32')];
+    end
+    forwardAddr(currentindex) = nfi;
+
+    % Get all the backward neighbors
+    nbid = indicesNDims(currentindex);
+    tmpaddr = indicesAddr(currentindex);
+    j = uint8(1);
+	
+    % Corrected bug: initialization of level vector was missing!
+    level = zeros(d,1,'uint8');
+
+    while j <= nbid
+        bdim(j)  = indicesDims(tmpaddr);
+        bid(j)   = backward(tmpaddr);
+        level(bdim(j)) = indicesLevs(tmpaddr);
+        tmpaddr = tmpaddr + 1;
+        j = j + 1;
+    end
+  
+    i = uint16(1);
+  
+    % Resize arrays if necessary
+    if ni+uint32(d) > maxind
+        maxind = ceil(maxind * RESIZE_FACTOR);
+        addind = max(double(d), double(maxind) - size(indicesNDims, 1));
+        maxind = uint32(size(indicesNDims,1) + addind);
+
+        indicesNDims = [indicesNDims; zeros(addind,1,'uint8')];
+        indicesDims  = [indicesDims; zeros(addind*min_nd,1,'uint16')];
+        indicesLevs  = [indicesLevs; zeros(addind*min_nd,1,'uint8')];
+        indicesAddr  = [indicesAddr; zeros(addind,1,'uint32')];
+
+        % Neighbor data
+        backward     = [backward; zeros(addind*min_nd,1,'uint32')];
+        forwardAddr  = [forwardAddr; zeros(addind,1,'uint32')];
+
+        % Store start adresses of a sub-grid in the support node array
+        ptsaddr      = [ptsaddr; zeros(addind,1, 'uint32')];
+        ptslen       = [ptslen; zeros(addind,1, 'uint32')];
+
+        % Indicate active/passive indices
+        active       = [active; false(addind,1)];
+
+        % Array containing ID's of active indices, ordered by 
+        % error/number of points
+        A            = [A; zeros(addind,1,'uint32')];
+        Ap           = [Ap; zeros(addind,1,'uint32')];
+        E            = [E zeros(nresults, addind)];
+        G            = [G; zeros(addind, 1)];
+        G2           = [G2; zeros(addind, 1)];
+    end
+            
+    niold = ni;
+    while i <= d
+	    % check if maximum depth is exceeded
+		if level(i) + 1 > maxDepth
+            i = i + 1;
+            continue;
+        end
+			
+        % check if a new index in direction l is admissible
+        isadmissible = true;
+
+        j = uint8(1);
+        while j <= nbid
+              if i == bdim(j) 
+                j = j + 1;
+                continue; 
+              end
+              forwardid = forwardAddr(bid(j));
+              if forwardid == 0
+                isadmissible = false;
+                break;
+              end
+              backofnew = forward(forwardid,i);
+              if backofnew == 0
+                isadmissible = false;
+                break;
+              elseif active(backofnew)
+                isadmissible = false;
+                break;
+              else
+                bn(bdim(j)) = backofnew;
+              end
+              j = j + 1;
+        end
+    
+        if isadmissible
+              atleastonestep = 1;
+              bn(i) = currentindex;
+              addr = indicesAddr(ni)+uint32(indicesNDims(ni));
+              ni = ni + 1;
+
+              indicesAddr(ni) = addr;
+
+              if maxlevel(i) < level(i) + 1;
+                maxlevel(i) = level(i) + 1;
+              end
+
+              if nbid == 0
+                    nnewdims = uint8(1);
+                    indicesDims(addr) = i;
+                    indicesLevs(addr) = uint8(1);
+                    backward(addr) = bn(i);
+                    forward(forwardAddr(bn(i)),i) = ni;
+                    npoints = uint32(2);
+                    addr = addr + 1;
+                    nisum = 1;
+              else
+                    j = uint8(1);
+                    insert = true;
+                    nnewdims = uint8(0);
+                    npoints = uint32(1);
+                    nisum = 0;
+                    nbidtemp = nbid;   % use temporary variable, since nbid
+                                       % must not change; it is not updated in
+                                       % case other admissible indices are
+                                       % found! 
+                    while j <= nbidtemp
+                          nnewdims = nnewdims + 1;
+                          id = bdim(j);
+                          if i > id
+                                lev = level(id);
+                                j  = j + 1;
+                                if insert && j > nbidtemp
+                                  bdim(nbidtemp+1) = i;
+                                  level(i) = 0;
+                                  nbidtemp = nbidtemp + 1;
+                                end
+                          elseif i == id
+                                insert = false;
+                                lev = level(id) + 1;
+                                j = j + 1;
+                          elseif insert
+                                insert = false;
+                                lev = uint8(1);
+                                id = i;
+                          else
+                                lev = level(id);
+                                j = j + 1;
+                          end
+
+                          forward(forwardAddr(bn(id)),id) = ni;
+                          indicesDims(addr) = id;
+                          indicesLevs(addr) = lev;
+                          backward(addr) = bn(id);
+
+                          % Compute the number of gridpoints
+                          if isgp == 1
+                                npoints = npoints * 2^uint32(lev);
+                          else
+                                if lev < 3
+                                    npoints = npoints * 2;
+                                else
+                                    npoints = npoints * 2^uint32(lev-1);
+                                end
+                          end
+
+                          % Compute index sum
+                          nisum = nisum + double(lev);
+
+                          addr = addr + 1;
+                    end
+               end
+              indicesNDims(ni) = nnewdims;
+              ptslen(ni) = npoints;
+              ptsaddr(ni) = ptsaddr(ni-1) + ptslen(ni-1);    
+              active(ni) = true;
+              ntotalpoints = ntotalpoints + npoints;
+              
+              if pickedAdaptive 
+                  nadaptpoints = nadaptpoints + npoints; 
+              end
+
+              % update current maximum number of points per index set
+              maxsetpoints = max(maxsetpoints, nisum);
+
+              % update second error indicator 
+              G2(ni) = 1./double(nisum);
+         end
+         i = i + 1;
+    end
+
+    if ni > niold
+        levelseq = struct('indicesNDims', indicesNDims, ...
+                          'indicesDims', indicesDims, ...
+                          'indicesLevs', indicesLevs, ...
+                          'indicesAddr', indicesAddr, ...
+                          'forwardAddr', forwardAddr, ...
+                          'forwardNeighbors', forward, ...
+                          'backwardNeighbors', backward, ...
+                          'subGridPoints', ptslen, ...
+                          'subGridAddr', ptsaddr);
+    
+		kend = niold;
+        while kend < ni
+            % Compute new function values for new index sets
+            t0 = clock;
+
+            psize = 0;
+            kstart = kend+1;
+            while psize < MAX_X_SIZE && kend < ni 
+                psize = psize + ptslen(kend) * double(d);
+                kend = kend + 1;
+            end
+			[znew(1:nresults), xnew] = ...
+					spevalf(gridgen, f, levelseq, d, [kstart, kend], ...
+									range, varpos, vectorized, nresults, ...
+									functionArgType,val{:});
+            
+			if strcmpi(keepFunctionValues, 'on')
+				for l = 1:nresults
+					y{l} = [y{l}; znew{l}];
+				end
+			end
+    
+			if strcmpi(keepGrid, 'on')
+				% Rescale sparse grid to actual range
+				xnew2 = xnew;
+				for l = 1:d
+					xnew2(:,l) = range(l,1)+(range(l,2)-range(l,1)).*xnew2(:,l);
+				end
+				x = [x; xnew2];
+			end
+    
+			fevalTime = fevalTime + etime(clock,t0);
+			for l = 1:nresults
+				[temp, id] = min(znew{l}(:));
+				if temp < zmin(l)
+					zmin(l) = temp;
+					xmin(l,:) = xnew(id,:);
+				end
+				[temp, id] = max(znew{l}(:));
+				if temp > zmax(l)
+					zmax(l) = temp;
+					xmax(l,:) = xnew(id,:);
+				end
+			end
+    
+			t0 = clock;
+			for l = 1:nresults
+				znew{l} = znew{l} - feval(ipmethod, d, z{l}, xnew, ...
+																	levelseq, kstart, kend);
+            end
+			if  strcmpi(gridtype, 'chebyshev')
+				for l = 1:nresults
+					znew{l} = reordervals(znew{l},levelseq, kstart, kend);
+				end
+            end
+			surplusCompTime = surplusCompTime + etime(clock,t0);
+            
+            if  strcmpi(keepWeight, 'on')
+                % compute new quadrature weight
+                address = sum(levelseq.indicesNDims(1:kstart-1))+1:sum(levelseq.indicesNDims(1:kend));
+                if  strcmpi(gridtype, 'chebyshev') 
+                    maxn = double(max(levelseq.indicesLevs(address)));
+                    [w1d, id] = feval(wtype, maxn);
+                    weightnew = feval(wgen,levelseq,w1d,id,kstart,kend);
+                elseif strcmpi(gridtype, 'gauss-patterson')
+                    maxn = double(max(levelseq.indicesLevs(address)));
+                    [w1d, id] = feval(wtype, maxn);
+                    weightnew = feval(wgen,levelseq,w1d,id,kstart,kend);
+                    if strcmpi(distributionType, 'beta')    
+                        pdf = ones(size(xnew,1),1);
+                        for lpdf = 1:d
+                            pdf = pdf.*betapdf(xnew(:,lpdf), 1, 1)/(range(l,2)-range(l,1));
+                        end 
+                        weightnew = weightnew.*pdf;
+                    end
+                elseif strcmpi(gridtype, 'clenshaw-curtis')
+                    weightnew = feval(wgen, levelseq, kstart, kend);
+                end
+            end
+            
+			ptsfrom = 1;
+			for k = kstart:kend
+				npoints = ptslen(k);
+				ptsend = ptsfrom + npoints - 1;
+				for l = 1:nresults
+                    switch problemType
+                        case 'interpolation'
+                            indicator(l) = sum(abs(znew{l}(ptsfrom:ptsend)))/double(npoints);
+                            E(l,k) = max(abs(znew{l}(ptsfrom:ptsend)));
+                        case 'integration'
+                            indicator(l) = abs(sum(znew{l}(ptsfrom:ptsend).*weightnew(ptsfrom:ptsend)))/double(npoints);%
+                            E(l,k) = abs(sum(znew{l}(ptsfrom:ptsend).*weightnew(ptsfrom:ptsend)));% /double(npoints)                      
+                        otherwise
+                            disp('choose between interpolation and integration');
+                    end
+				end
+				ptsfrom = ptsend + 1;
+      
+				G(k) = max(indicator);
+
+				% add new index to the set of active indices
+				na = na + 1;
+				A(na) = k;
+				A = sortheap(A, double(na), G);
+				nap = nap + 1;
+				Ap(nap) = k;
+				Ap = sortheap(Ap, double(nap), G2);
+            end
+            
+			for l = 1:nresults
+				z{l} = [z{l}; znew{l}];
+                if  strcmpi(keepWeight, 'on')
+                    weight = [weight; weightnew];
+                end
+            end
+        end
+    end
+  
+
+	% Compute new error only if any new indices were added, and if we know
+	% the algorithm could abort after this step.
+    if ni > niold && (ntotalpoints >= minPoints || all(maxlevel == maxDepth)) 
+        % Compute relative error estimator
+        if all(zmax-zmin) > 0
+          for l2 = 1:nresults
+            maxsurplus(l2) = 0;
+            % Loop over active indices, first criterium
+            for l = 1:na
+              % Check if it is still an active index (might have been
+              % processed by other criterium)
+              if active(A(l)) == true
+                temp = E(l2,A(l));
+                if temp > maxsurplus(l2)
+                  maxsurplus(l2) = temp;
+                end
+              end
+            end
+            % Loop over active indices, second criterium
+            for l = 1:nap
+              % Check if it is still an active index (might have been
+              % processed by other criterium)
+              if active(Ap(l)) == true
+                temp = E(l2,Ap(l));
+                if temp > maxsurplus(l2)
+                  maxsurplus(l2) = temp;
+                end
+              end
+            end      
+          end
+          accuracy = max(maxsurplus./(zmax-zmin));
+       else
+          accuracy = inf;
+       end
+       absaccuracy = max(maxsurplus);
+    
+       if strcmpi(problemType, 'integration')
+           maxsurplus = zeros(1,nresults);
+           for l = 1:na
+               if active(A(l)) == true
+                   for l2 = 1:nresults
+                        maxsurplus(l2) = maxsurplus(l2) + E(l2,A(l));
+                   end
+               end
+           end
+           absaccuracy = max(maxsurplus);
+       end
+       
+        % break if desired relative accuracy is reached, or if desired
+        % absolute tolerance is reached, but only if the minimum number
+        % of levels have been computed. Do this over all accuracies
+        % in the active set.
+        if (accuracy <= reltol || absaccuracy <= abstol)
+            if atleastonestep, success = 1; end
+        end
+    end    
+ 
+     %% % verification for the newly added indices 
+    if ~success && strcmpi(verification, 'on') && (ni > niold)
+        verficationActive = active;
+        verificationA = A;
+        verificationNa = na;
+        verificationE = E;
+        verificationKstart = kstart;
+        verificationKend = kend;
+        for vi = verificationKstart:verificationKend
+            % absolute accuracy for interpolation
+            maxsurplus = zeros(1,nresults);
+            for l2 = 1:nresults
+                maxsurplus(l2) = verificationE(l2,vi);
+            end
+            verificationAbsaccuracy = max(maxsurplus);
+            % absolute accuracy for integration
+           if strcmpi(problemType, 'integration')
+               maxsurplus = zeros(1,nresults);
+               for la = 1:verificationNa
+                   if verficationActive(verificationA(la)) == true
+                       for l2 = 1:nresults
+                            maxsurplus(l2) = maxsurplus(l2) + verificationE(l2,verificationA(la));
+                       end
+                   end
+               end
+               verificationAbsaccuracy = max(maxsurplus);
+           end         
+
+           if verificationAbsaccuracy <= abstol
+                currentindex = vi;
+
+                % indicate old index set
+                active(currentindex) = false;
+
+                nfi = nfi + 1;
+                % Resize forward neighbor array if necessary
+                if nfi > maxforwardind
+                      maxforwardind = ceil(maxforwardind * RESIZE_FACTOR);
+                      addind = maxforwardind - size(forward, 1);
+                      forward = [forward; zeros(addind,d,'uint32')];
+                end
+                forwardAddr(currentindex) = nfi;
+
+                % Get all the backward neighbors
+                nbid = indicesNDims(currentindex);
+                tmpaddr = indicesAddr(currentindex);
+                j = uint8(1);
+
+                % Corrected bug: initialization of level vector was missing!
+                level = zeros(d,1,'uint8');
+
+                while j <= nbid
+                    bdim(j)  = indicesDims(tmpaddr);
+                    bid(j)   = backward(tmpaddr);
+                    level(bdim(j)) = indicesLevs(tmpaddr);
+                    tmpaddr = tmpaddr + 1;
+                    j = j + 1;
+                end
+
+                i = uint16(1);
+
+                % Resize arrays if necessary
+                if ni+uint32(d) > maxind
+                    maxind = ceil(maxind * RESIZE_FACTOR);
+                    addind = max(double(d), double(maxind) - size(indicesNDims, 1));
+                    maxind = uint32(size(indicesNDims,1) + addind);
+
+                    indicesNDims = [indicesNDims; zeros(addind,1,'uint8')];
+                    indicesDims  = [indicesDims; zeros(addind*min_nd,1,'uint16')];
+                    indicesLevs  = [indicesLevs; zeros(addind*min_nd,1,'uint8')];
+                    indicesAddr  = [indicesAddr; zeros(addind,1,'uint32')];
+
+                    % Neighbor data
+                    backward     = [backward; zeros(addind*min_nd,1,'uint32')];
+                    forwardAddr  = [forwardAddr; zeros(addind,1,'uint32')];
+
+                    % Store start adresses of a sub-grid in the support node array
+                    ptsaddr      = [ptsaddr; zeros(addind,1, 'uint32')];
+                    ptslen       = [ptslen; zeros(addind,1, 'uint32')];
+
+                    % Indicate active/passive indices
+                    active       = [active; false(addind,1)];
+
+                    % Array containing ID's of active indices, ordered by 
+                    % error/number of points
+                    A            = [A; zeros(addind,1,'uint32')];
+                    Ap           = [Ap; zeros(addind,1,'uint32')];
+                    E            = [E zeros(nresults, addind)];
+                    G            = [G; zeros(addind, 1)];
+                    G2           = [G2; zeros(addind, 1)];
+                end
+
+                niold = ni;
+                while i <= d
+                    % check if maximum depth is exceeded
+                    if level(i) + 1 > maxDepth
+                        i = i + 1;
+                        continue;
+                    end
+
+                    % check if a new index in direction l is admissible
+                    isadmissible = true;
+
+                    j = uint8(1);
+                    while j <= nbid
+                          if i == bdim(j) 
+                            j = j + 1;
+                            continue; 
+                          end
+                          forwardid = forwardAddr(bid(j));
+                          if forwardid == 0
+                            isadmissible = false;
+                            break;
+                          end
+                          backofnew = forward(forwardid,i);
+                          if backofnew == 0
+                            isadmissible = false;
+                            break;
+                          elseif active(backofnew)
+                            isadmissible = false;
+                            break;
+                          else
+                            bn(bdim(j)) = backofnew;
+                          end
+                          j = j + 1;
+                    end
+
+                    if isadmissible
+                          atleastonestep = 1;
+                          bn(i) = currentindex;
+                          addr = indicesAddr(ni)+uint32(indicesNDims(ni));
+                          ni = ni + 1;
+
+                          indicesAddr(ni) = addr;
+
+                          if maxlevel(i) < level(i) + 1;
+                            maxlevel(i) = level(i) + 1;
+                          end
+
+                          if nbid == 0
+                                nnewdims = uint8(1);
+                                indicesDims(addr) = i;
+                                indicesLevs(addr) = uint8(1);
+                                backward(addr) = bn(i);
+                                forward(forwardAddr(bn(i)),i) = ni;
+                                npoints = uint32(2);
+                                addr = addr + 1;
+                                nisum = 1;
+                          else
+                                j = uint8(1);
+                                insert = true;
+                                nnewdims = uint8(0);
+                                npoints = uint32(1);
+                                nisum = 0;
+                                nbidtemp = nbid;   % use temporary variable, since nbid
+                                                   % must not change; it is not updated in
+                                                   % case other admissible indices are
+                                                   % found! 
+                                while j <= nbidtemp
+                                      nnewdims = nnewdims + 1;
+                                      id = bdim(j);
+                                      if i > id
+                                            lev = level(id);
+                                            j  = j + 1;
+                                            if insert && j > nbidtemp
+                                              bdim(nbidtemp+1) = i;
+                                              level(i) = 0;
+                                              nbidtemp = nbidtemp + 1;
+                                            end
+                                      elseif i == id
+                                            insert = false;
+                                            lev = level(id) + 1;
+                                            j = j + 1;
+                                      elseif insert
+                                            insert = false;
+                                            lev = uint8(1);
+                                            id = i;
+                                      else
+                                            lev = level(id);
+                                            j = j + 1;
+                                      end
+
+                                      forward(forwardAddr(bn(id)),id) = ni;
+                                      indicesDims(addr) = id;
+                                      indicesLevs(addr) = lev;
+                                      backward(addr) = bn(id);
+
+                                      % Compute the number of gridpoints
+                                      if isgp == 1
+                                            npoints = npoints * 2^uint32(lev);
+                                      else
+                                            if lev < 3
+                                                npoints = npoints * 2;
+                                            else
+                                                npoints = npoints * 2^uint32(lev-1);
+                                            end
+                                      end
+
+                                      % Compute index sum
+                                      nisum = nisum + double(lev);
+
+                                      addr = addr + 1;
+                                end
+                           end
+                          indicesNDims(ni) = nnewdims;
+                          ptslen(ni) = npoints;
+                          ptsaddr(ni) = ptsaddr(ni-1) + ptslen(ni-1);    
+                          active(ni) = true;
+                          ntotalpoints = ntotalpoints + npoints;
+
+                          if pickedAdaptive 
+                              nadaptpoints = nadaptpoints + npoints; 
+                          end
+
+                          % update current maximum number of points per index set
+                          maxsetpoints = max(maxsetpoints, nisum);
+
+                          % update second error indicator 
+                          G2(ni) = 1./double(nisum);
+                     end
+                     i = i + 1;
+                end
+
+                if ni > niold
+                    levelseq = struct('indicesNDims', indicesNDims, ...
+                                      'indicesDims', indicesDims, ...
+                                      'indicesLevs', indicesLevs, ...
+                                      'indicesAddr', indicesAddr, ...
+                                      'forwardAddr', forwardAddr, ...
+                                      'forwardNeighbors', forward, ...
+                                      'backwardNeighbors', backward, ...
+                                      'subGridPoints', ptslen, ...
+                                      'subGridAddr', ptsaddr);
+
+                    kend = niold;
+                    while kend < ni
+                        % Compute new function values for new index sets
+                        t0 = clock;
+
+                        psize = 0;
+                        kstart = kend+1;
+                        while psize < MAX_X_SIZE && kend < ni 
+                            psize = psize + ptslen(kend) * double(d);
+                            kend = kend + 1;
+                        end
+                        [znew(1:nresults), xnew] = ...
+                                spevalf(gridgen, f, levelseq, d, [kstart, kend], ...
+                                                range, varpos, vectorized, nresults, ...
+                                                functionArgType,val{:});
+
+                        if strcmpi(keepFunctionValues, 'on')
+                            for l = 1:nresults
+                                y{l} = [y{l}; znew{l}];
+                            end
+                        end
+
+                        if strcmpi(keepGrid, 'on')
+                            % Rescale sparse grid to actual range
+                            xnew2 = xnew;
+                            for l = 1:d
+                                xnew2(:,l) = range(l,1)+(range(l,2)-range(l,1)).*xnew2(:,l);
+                            end
+                            x = [x; xnew2];
+                        end
+
+                        fevalTime = fevalTime + etime(clock,t0);
+                        for l = 1:nresults
+                            [temp, id] = min(znew{l}(:));
+                            if temp < zmin(l)
+                                zmin(l) = temp;
+                                xmin(l,:) = xnew(id,:);
+                            end
+                            [temp, id] = max(znew{l}(:));
+                            if temp > zmax(l)
+                                zmax(l) = temp;
+                                xmax(l,:) = xnew(id,:);
+                            end
+                        end
+
+                        t0 = clock;
+                        for l = 1:nresults
+                            znew{l} = znew{l} - feval(ipmethod, d, z{l}, xnew, ...
+                                                                                levelseq, kstart, kend);
+                        end
+                        if  strcmpi(gridtype, 'chebyshev')
+                            for l = 1:nresults
+                                znew{l} = reordervals(znew{l},levelseq, kstart, kend);
+                            end
+                        end
+                        surplusCompTime = surplusCompTime + etime(clock,t0);
+
+                        if  strcmpi(keepWeight, 'on')
+                            % compute new quadrature weight
+                            address = sum(levelseq.indicesNDims(1:kstart-1))+1:sum(levelseq.indicesNDims(1:kend));
+                            if  strcmpi(gridtype, 'chebyshev') 
+                                maxn = double(max(levelseq.indicesLevs(address)));
+                                [w1d, id] = feval(wtype, maxn);
+                                weightnew = feval(wgen,levelseq,w1d,id,kstart,kend);
+                            elseif strcmpi(gridtype, 'gauss-patterson')
+                                maxn = double(max(levelseq.indicesLevs(address)));
+                                [w1d, id] = feval(wtype, maxn);
+                                weightnew = feval(wgen,levelseq,w1d,id,kstart,kend);
+                                if strcmpi(distributionType, 'beta')    
+                                    pdf = ones(size(xnew,1),1);
+                                    for lpdf = 1:d
+                                        pdf = pdf.*betapdf(xnew(:,lpdf), l, l)/(range(l,2)-range(l,1));
+                                    end 
+                                    weightnew = weightnew.*pdf;
+                                end
+                            elseif strcmpi(gridtype, 'clenshaw-curtis')
+                                weightnew = feval(wgen, levelseq, kstart, kend);
+                            end
+                        end
+                        
+                        ptsfrom = 1;
+                        for k = kstart:kend
+                            npoints = ptslen(k);
+                            ptsend = ptsfrom + npoints - 1;
+                            for l = 1:nresults
+                                switch problemType
+                                    case 'interpolation'
+                                        indicator(l) = sum(abs(znew{l}(ptsfrom:ptsend)))/double(npoints);
+                                        E(l,k) = max(abs(znew{l}(ptsfrom:ptsend)));
+                                    case 'integration'
+                                        indicator(l) = abs(sum(znew{l}(ptsfrom:ptsend).*weightnew(ptsfrom:ptsend)))/double(npoints);%
+                                        E(l,k) = abs(sum(znew{l}(ptsfrom:ptsend).*weightnew(ptsfrom:ptsend)));% /double(npoints)                      
+                                    otherwise
+                                        disp('choose between interpolation and integration');
+                                end
+                            end
+                            ptsfrom = ptsend + 1;
+
+                            G(k) = max(indicator);
+
+                            % add new index to the set of active indices
+                            na = na + 1;
+                            A(na) = k;
+                            A = sortheap(A, double(na), G);
+                            nap = nap + 1;
+                            Ap(nap) = k;
+                            Ap = sortheap(Ap, double(nap), G2);
+                        end
+
+                        for l = 1:nresults
+                            z{l} = [z{l}; znew{l}];
+                            if  strcmpi(keepWeight, 'on')
+                                weight = [weight; weightnew];
+                            end
+                        end
+                    end
+                end               
+
+
+%                     % stop further construction from the newly added index
+%                     for kactive = kstart:kend
+%                         % absolute accuracy for interpolation
+%                         maxsurplus = zeros(1,nresults);
+%                         for l2 = 1:nresults
+%                             maxsurplus(l2) = E(l2,kactive);
+%                         end
+%                         absaccuracy = max(maxsurplus);
+%                         % absolute accuracy for integration
+%                         if strcmpi(problemType, 'integration')
+%                            maxsurplus = zeros(1,nresults);
+%                            for la = 1:na
+%                                if active(A(la)) == true
+%                                    for l2 = 1:nresults
+%                                         maxsurplus(l2) = maxsurplus(l2) + E(l2,A(la));
+%                                    end
+%                                end
+%                            end
+%                            absaccuracy = max(maxsurplus);
+%                         end                             
+%                         if absaccuracy <= abstol
+%                             active(kactive) = false;
+%                         end
+%                     end
+
+           end
+
+        end
+    end
+    
+    
+    
+    
+%     disp(['success 2 = ',num2str(success)])
+    
+    
+    
+%% end of the adaptive construction
+end
+
+if ~atleastonestep
+      warning('MATLAB:spinterp:maxDepthReached', ...
+              ['No more active indices left, returning previous result. ' ...
+                         'Restart the calculation with a higher MaxDepth ' ...
+                         'setting.']);
+      if ~isempty(zprev)
+          z = zprev;
+          return;
+      end
+end
+
+if ~success
+      if ntotalpoints >= maxPoints
+            warning('MATLAB:spinterp:maxPointsReached', ...
+                   ['Current number of support nodes nPoints = ' ...
+                    num2str(ntotalpoints) ':' ...
+                    ' MaxPoints = ' num2str(maxPoints) ...
+                    ' reached before accuracies' ...
+                            ' RelTol = ' num2str(reltol) ' or AbsTol = ' num2str(abstol) ...
+                            ' were achieved.\nThe current' ...  
+                            ' estimated relative accuracy is ' num2str(accuracy) ...
+                            '. Increase maximum number of allowable points MaxPoints' ...
+                    ' to further refine the interpolant. ']);
+      else
+            warning('MATLAB:spinterp:maxDepthReached', ...
+                    ['No more active indices left. Restart the calculation ' ...
+                                 'with a higher MaxDepth setting to further refine the ' ...
+                                 'interpolant.']);
+      end
+end
+
+% Store results in structure
+ztemp = z;
+clear z;
+z.vals = ztemp;
+if  strcmpi(keepWeight, 'on')
+    z.weight = weight;
+end
+z.gridType = gridtype;
+z.d = double(d);
+z.range = range;
+z.estRelError = accuracy;
+z.estAbsError = absaccuracy;
+z.fevalRange = [zmin zmax];
+z.minGridVal = xmin;
+z.maxGridVal = xmax;
+z.nPoints = ntotalpoints;
+z.success = success;
+
+z.dimadaptDegree = double(nadaptpoints)/double(ntotalpoints);
+% if isps
+% 	z.dimadaptDegree = double(nadaptpoints)/double(ntotalpoints);
+% end
+z.fevalTime = fevalTime;
+z.surplusCompTime = surplusCompTime;
+
+levelseq = struct('indicesNDims', indicesNDims(1:ni), ...
+                  'indicesDims', indicesDims(1:addr-1), ...
+                  'indicesLevs', indicesLevs(1:addr-1), ...
+                  'indicesAddr', indicesAddr(1:ni), ...
+                  'active', active(1:ni), ...
+                  'forwardAddr', forwardAddr(1:ni), ...
+                  'forwardNeighbors', forward(1:nfi,:), ...
+                  'backwardNeighbors', backward(1:addr-1), ...
+                  'subGridPoints', ptslen(1:ni), ...
+                  'subGridAddr', ptsaddr(1:ni));
+
+z.indices = levelseq;
+z.maxLevel = maxlevel;
+
+z.activeIndices = A(1:na);
+z.activeIndices2 = Ap(1:nap);
+z.E = E(:,1:ni);
+z.G = G(1:ni);
+z.G2 = G2(1:ni);
+z.maxSetPoints = maxsetpoints;
+z.dimAdapt = true;
+
+if strcmpi(keepFunctionValues, 'on')
+    z.fvals = y;
+end
+if strcmpi(keepGrid, 'on')
+    z.grid = {x};
+end
+
+##### SOURCE END #####
+--></body></html>
