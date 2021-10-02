@@ -19,6 +19,8 @@ Depending on the sparsity of the integrand, it can achieve dimension-independent
 <img src="images/sparse-quadrature.png">
 Indices and quadrature points of tensor-product grid, isotropic sparse grid, and anisotropic sparse grid.
 
+<br>
+
 <img src="images/sp-dimension.png" width="50%">
 <p>
 Index/level in each dimension built by a-priori and a-posteriori construction algorithms using Gauss-Hermite (GH) quadrature, increasing one point (GH1) or double the number of points (GH2) in each level.
