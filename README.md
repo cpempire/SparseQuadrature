@@ -16,9 +16,6 @@ This library implements sparse quadrature rule for high-dimensional integration 
 ```
 
 It achieved dimension-independent convergence rates and faster convergence than Monte Carlo for high-dimensional integration problems as shown below 
-![sparse quadrature](images/sp-dimension.png){:height="50%" width="50%"}
-![sparse quadrature](images/sp-gaussian.png){:height="50%" width="50%"}
-![sparse quadrature](images/sp-mc.png){:height="50%" width="50%"}
-<img src="images/sp-dimension.png" width="30%">
-<img src="images/sp-gaussian.png" width="30%">
-<img src="images/sp-mc.png" width="30%">
+<img src="images/sp-dimension.png" width="25%">
+<img src="images/sp-gaussian.png" width="25%">
+<img src="images/sp-mc.png" width="25%">
