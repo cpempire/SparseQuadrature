@@ -18,7 +18,7 @@ Depending on the sparsity of the integrand, it can achieve dimension-independent
 
 <img src="images/sparse-quadrature.png">
 <p>
-Indices and quadrature points of tensor-product grid, isotropic sparse grid, and anisotropic sparse grid.
+The admissible index sets (top) and the corresponding Genz–Keister (GK) quadrature points (bottom).Left: tensor-product grids; middle: isotropic Smolyak sparse grids; right: anisotropic sparse grids.
 </p>
 
 <br/>
@@ -38,5 +38,5 @@ Convergence of different quadrature rules including Gauss-Hermite (GH1 and GH2),
 <br/>
 <img src="images/sp-mc.png" width="80%">
 <p>
-Convergence of sparse quadrature with Genz–Keister (GK) rule compared with that of Monte Carlo for integrand with different sparsity.
+Convergence of sparse quadrature with Genz–Keister (GK) rule compared with that of Monte Carlo for integrands with different sparsity.
 </p>
