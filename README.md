@@ -14,6 +14,8 @@ This library implements sparse quadrature rule for high-dimensional integration 
   publisher={EDP Sciences}
 }
 ```
-which proposed both a-priori and a-posteriori construction algorithms.
+which proposed both a-priori and a-posteriori construction algorithms. 
+
+![sparse quadrature](images/sparse-quadrature.png)
 
 The library is built based on [Sparse Grid Interpolation Toolbox](https://people.sc.fsu.edu/~jburkardt/m_src/spinterp/spinterp.html) developed by Andreas Klimke, Universitaet Stuttgart.
